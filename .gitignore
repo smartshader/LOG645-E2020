@@ -99,3 +99,4 @@ build/
 Debug/
 *.filters
 *.user
+*.DS_Store
