@@ -11,8 +11,8 @@
 ##          ssh-copy-id AJ12345@log645-srv-1.logti.etsmtl.ca ##
 
 ## removes trailings r from scripts ##
-sed -i 's/\r$//' run.sh
-sed -i 's/\r$//' prep.sh
+sed -i 's/\r$//' ./par/run.sh
+sed -i 's/\r$//' prepPar.sh
 
 ## variables ##
 _mydir="$(pwd)"
