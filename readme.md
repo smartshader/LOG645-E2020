@@ -1,4 +1,4 @@
-Repository for LOG645 labs
+# Repository for LOG645 labs
 
 #### Setting up permanent SSH auth between your personal computer and ETS' server
 Creating a permanent SSH auth link between your workstation and the server will make it easier to run your own custom .sh scripts without having to constantly log into the remote server manually each time.
