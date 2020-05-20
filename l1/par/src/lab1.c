@@ -55,6 +55,7 @@ void printRuntime(struct timeval tvs, struct timeval tve) {
 }
 
 void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, int ** matrix) {
+    printf("Problem 1 to be executed.\n");
     // for(int k = 1; k <= iterations; k++) {
     //     for(int j = 0; j < cols; j++) {
     //         for(int i = 0; i < rows; i++) {
@@ -66,6 +67,7 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
 }
 
 void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, int ** matrix) {
+    printf("Problem 2 to be executed.\n");
     // for(int k = 1; k <= iterations; k++) {
     //     for(int i = 0; i < rows; i++) {
     //         usleep(1000);
