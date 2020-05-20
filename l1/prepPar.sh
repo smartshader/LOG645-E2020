@@ -8,11 +8,11 @@
 ## generate ssh key (if you haven't done it yet) ##
 ##          ssh-keygen -t rsa -b 4096 ##
 ## ssh copy to the server (it'll prompt for a PW later) ##
-##          ssh-copy-id AJ12345@log645-srv-1.logti.etsmtl.ca ##
+##          ssh-copy-id AJ12345@log645-srv-1.logti.etsmtl.ca##
 
 ## removes trailings r from scripts ##
-sed -i 's/\r$//' ./par/run.sh
-sed -i 's/\r$//' prepPar.sh
+sed -i""  's/\r$//' ./par/run.sh
+sed -i""  's/\r$//' prepPar.sh
 
 ## variables ##
 _mydir="$(pwd)"
