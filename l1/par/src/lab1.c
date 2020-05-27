@@ -31,11 +31,9 @@ int *initMatrix(int matrixSize, int initialValue) {
             else{
                 matrix[matrixSizeIterator + iter] = initialValue;
             }
-
-            rowIdentifier++;
         }
+        rowIdentifier++;
     }
-
     return matrix;
 }
 
@@ -71,7 +69,7 @@ void printRuntime(struct timeval tvs, struct timeval tve) {
     printf("Runtime: %.6f seconds\n", delta / 1000000.0);
 }
 
-void printFinalResults(struct timeval timestamp_s, struct timeval timestamp_e, int * matrix, int matrixSize){
+void printFinalResults(struct timeval timestamp_s, struct timeval timestamp_e, int *matrix, int matrixSize){
     printf("END - Master Thread\n");
     gettimeofday(&timestamp_e, NULL);
     printMatrix(matrix, matrixSize);
@@ -98,6 +96,7 @@ int *solveSecond(int *matrix, int cellsToProcess, int iteration) {
 
     return matrix;
 }
+
 
 int main(int argc, char* argv[]) {
 
@@ -182,7 +181,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (cpuRank == MASTER_THREAD) {
-        printFinalResults(timestamp_s,timestamp_e, wholeMatrix, matrixSize);
+        printFinalResults(timestamp_s,timestamp_e, combinedSubMatrixes, matrixSize);
     }
 
     MPI_Finalize();
