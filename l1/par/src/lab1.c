@@ -181,16 +181,16 @@ int main(int argc, char* argv[]) {
     }
 
     // GATHER STAGE - gathers all singleSubMatrixCalculated to the root process
-    int *combinedSubMatrixes = NULL;
+    int *totalSubMatrixes = NULL;
 
     if (cpuRank == MASTER_THREAD) {
-        combinedSubMatrixes = (int *)malloc(sizeof(int) * matrixSize);
+        totalSubMatrixes = (int *)malloc(sizeof(int) * matrixSize);
     }
 
     int data_gather = MPI_Gather(singleSubMatrixCalculated, 
                                     cellsPerSubMatrix, 
                                     MPI_INT, 
-                                    combinedSubMatrixes, 
+                                    totalSubMatrixes, 
                                     cellsPerSubMatrix, 
                                     MPI_INT, 
                                     0, 
@@ -202,7 +202,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (cpuRank == MASTER_THREAD) {
-        printFinalResults(timestamp_s,timestamp_e, combinedSubMatrixes, matrixSize);
+        printFinalResults(timestamp_s,timestamp_e, totalSubMatrixes, matrixSize);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
