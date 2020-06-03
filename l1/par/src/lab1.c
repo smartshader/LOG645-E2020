@@ -20,16 +20,17 @@ int *initMatrix(int matrixSize, int initialValue) {
 
     int rowIdentifier = 0;
 
-    for (int matrixSizeIterator = 0; matrixSizeIterator < matrixSize; matrixSizeIterator+=MATRIX_LEN){
-        for (int iter = 0; iter < MATRIX_LEN; iter++){
-            if (iter == 0){
-                matrix[matrixSizeIterator] = initialValue;
+    for (int matrixRowIterator = 0; matrixRowIterator < matrixSize; matrixRowIterator+=MATRIX_LEN){
+
+        for (int rowIterator = 0; rowIterator < MATRIX_LEN; rowIterator++){
+            if (rowIterator == 0){
+                matrix[matrixRowIterator] = initialValue;
             }
-            else if (iter == 1){
-                matrix[matrixSizeIterator + 1] = rowIdentifier;
+            else if (rowIterator == 1){
+                matrix[matrixRowIterator + 1] = rowIdentifier;
             }
             else{
-                matrix[matrixSizeIterator + iter] = initialValue;
+                matrix[matrixRowIterator + rowIterator] = initialValue;
             }
         }
         rowIdentifier++;
@@ -78,15 +79,16 @@ void printFinalResults(struct timeval timestamp_s, struct timeval timestamp_e, i
 
 int *solveFirst(int *matrix, int cellsToProcess, int iteration)
 {
-    int i, k;
+    int matrixRowIterator, k;
+
     for (k = 0; k <= iteration; k++)
     {
-        for (i = 0; i < cellsToProcess; i += MATRIX_LEN)
+        for (matrixRowIterator = 0; matrixRowIterator < cellsToProcess; matrixRowIterator += MATRIX_LEN)
         {
             usleep(1000);
-            int i_ = coord[matrix[i + 1]].i_position;
-            int j_ = coord[matrix[i + 1]].j_position;
-            matrix[i] = matrix[i] + (i_ + j_) * k;
+            int iCurrent = coord[matrix[matrixRowIterator + 1]].i_position;
+            int jCurrent = coord[matrix[matrixRowIterator + 1]].j_position;
+            matrix[matrixRowIterator] = matrix[matrixRowIterator] + (iCurrent + jCurrent) * k;
         }
     }
     return matrix;
@@ -115,12 +117,13 @@ int main(int argc, char* argv[]) {
 
     // ---------------initialize MPI environment
     MPI_Init(&argc, &argv);
+
     gettimeofday(&timestamp_s, NULL);
     int instanceSize, cpuRank;
     MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
 
     if ((ROWS*COLS) % instanceSize != 0){
-        printf("Multiple de 64 is required.\n");
+        printf("Multiple of 64 is required.\n");
         MPI_Finalize();
         return EXIT_FAILURE;
     }
@@ -144,14 +147,16 @@ int main(int argc, char* argv[]) {
         wholeMatrix = initMatrix(matrixSize, initialValue);
     }
 
-    int numCellsPerProcessor = (matrixSize) / instanceSize;
-    int *subMatrix = (int *)malloc(sizeof(int) * numCellsPerProcessor);
+    // SCATTER STAGE
+    int cellsPerSubMatrix = (matrixSize) / instanceSize;
+
+    int *subMatrix = (int *)malloc(sizeof(int) * cellsPerSubMatrix);
 
     int scatterStatus = MPI_Scatter(wholeMatrix, 
-                                    numCellsPerProcessor, 
+                                    cellsPerSubMatrix, 
                                     MPI_INT, 
                                     subMatrix, 
-                                    numCellsPerProcessor, 
+                                    cellsPerSubMatrix, 
                                     MPI_INT, 
                                     0, 
                                     MPI_COMM_WORLD);
@@ -161,30 +166,32 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    int *singleSubMatCalculated = NULL;
+    // PARALLEL CALCULATIONS STAGE
+    int *singleSubMatrixCalculated = NULL;
 
     if (problemChoice == 1){
-        singleSubMatCalculated = solveFirst(subMatrix, numCellsPerProcessor, iterations);
+        singleSubMatrixCalculated = solveFirst(subMatrix, cellsPerSubMatrix, iterations);
     }
     else if (problemChoice == 2){
-        singleSubMatCalculated = solveSecond(subMatrix, numCellsPerProcessor, iterations);
+        singleSubMatrixCalculated = solveSecond(subMatrix, cellsPerSubMatrix, iterations);
     }
     else{
         printf("[Error] Select valid problem choice\n");
         return EXIT_FAILURE;
     }
 
+    // GATHER STAGE
     int *combinedSubMatrixes = NULL;
 
     if (cpuRank == MASTER_THREAD) {
         combinedSubMatrixes = (int *)malloc(sizeof(int) * matrixSize);
     }
 
-    int data_gather = MPI_Gather(singleSubMatCalculated, 
-                                    numCellsPerProcessor, 
+    int data_gather = MPI_Gather(singleSubMatrixCalculated, 
+                                    cellsPerSubMatrix, 
                                     MPI_INT, 
                                     combinedSubMatrixes, 
-                                    numCellsPerProcessor, 
+                                    cellsPerSubMatrix, 
                                     MPI_INT, 
                                     0, 
                                     MPI_COMM_WORLD);
