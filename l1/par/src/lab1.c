@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    // initialize Matrix
+    // initialize Matrix on root process
     int matrixSize = ROWS * COLS * MATRIX_LEN;
     int *wholeMatrix = NULL;
 
@@ -147,11 +147,11 @@ int main(int argc, char* argv[]) {
         wholeMatrix = initMatrix(matrixSize, initialValue);
     }
 
-    // SCATTER STAGE
+    // For each process, create subMatrix buffers based on cellsPerSubMatrix
     int cellsPerSubMatrix = (matrixSize) / instanceSize;
-
     int *subMatrix = (int *)malloc(sizeof(int) * cellsPerSubMatrix);
 
+    // SCATTER STAGE - scatters from root proc to all process
     int scatterStatus = MPI_Scatter(wholeMatrix, 
                                     cellsPerSubMatrix, 
                                     MPI_INT, 
@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // PARALLEL CALCULATIONS STAGE
+    // COMPUTE STAGE
     int *singleSubMatrixCalculated = NULL;
 
     if (problemChoice == 1){
@@ -180,7 +180,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // GATHER STAGE
+    // GATHER STAGE - gathers all singleSubMatrixCalculated to the root process
     int *combinedSubMatrixes = NULL;
 
     if (cpuRank == MASTER_THREAD) {
@@ -205,6 +205,7 @@ int main(int argc, char* argv[]) {
         printFinalResults(timestamp_s,timestamp_e, combinedSubMatrixes, matrixSize);
     }
 
+    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
     return EXIT_SUCCESS;
 }
