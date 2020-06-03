@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
         totalSubMatrixes = (int *)malloc(sizeof(int) * matrixSize);
     }
 
-    int data_gather = MPI_Gather(singleSubMatrixCalculated, 
+    int mpiGatherResult = MPI_Gather(singleSubMatrixCalculated, 
                                     cellsPerSubMatrix, 
                                     MPI_INT, 
                                     totalSubMatrixes, 
@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) {
                                     0, 
                                     MPI_COMM_WORLD);
 
-    if (data_gather != MPI_SUCCESS){
+    if (mpiGatherResult != MPI_SUCCESS){
         printf("[Error] MPI_Gather\n");
         return EXIT_FAILURE;
     }
