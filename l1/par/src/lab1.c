@@ -147,7 +147,14 @@ int main(int argc, char* argv[]) {
     int numCellsPerProcessor = (matrixSize) / instanceSize;
     int *subMatrix = (int *)malloc(sizeof(int) * numCellsPerProcessor);
 
-    int scatterStatus = MPI_Scatter(wholeMatrix, numCellsPerProcessor, MPI_INT, subMatrix, numCellsPerProcessor, MPI_INT, 0, MPI_COMM_WORLD);
+    int scatterStatus = MPI_Scatter(wholeMatrix, 
+                                    numCellsPerProcessor, 
+                                    MPI_INT, 
+                                    subMatrix, 
+                                    numCellsPerProcessor, 
+                                    MPI_INT, 
+                                    0, 
+                                    MPI_COMM_WORLD);
 
     if (scatterStatus != MPI_SUCCESS){
         printf("[Error] MPI_Scatter\n");
@@ -173,7 +180,14 @@ int main(int argc, char* argv[]) {
         combinedSubMatrixes = (int *)malloc(sizeof(int) * matrixSize);
     }
 
-    int data_gather = MPI_Gather(singleSubMatCalculated, numCellsPerProcessor, MPI_INT, combinedSubMatrixes, numCellsPerProcessor, MPI_INT, 0, MPI_COMM_WORLD);
+    int data_gather = MPI_Gather(singleSubMatCalculated, 
+                                    numCellsPerProcessor, 
+                                    MPI_INT, 
+                                    combinedSubMatrixes, 
+                                    numCellsPerProcessor, 
+                                    MPI_INT, 
+                                    0, 
+                                    MPI_COMM_WORLD);
 
     if (data_gather != MPI_SUCCESS){
         printf("[Error] MPI_Gather\n");
