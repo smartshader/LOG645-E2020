@@ -7,6 +7,7 @@
 
 #define ROWS 8
 #define COLS 8
+#define MASTER_THREAD 0
 
 int ** allocateMatrix(int rows, int cols) {
     int ** matrix = (int **) malloc(rows * sizeof(int *));
@@ -70,7 +71,7 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     if (cpuRank == MASTER_THREAD){
         gettimeofday(&timestamp_s, NULL);
         matrix = allocateMatrix(ROWS, COLS);
-        matrix = initMatrix(ROWS, COLS, initialValue, matrix);
+        initializeMatrix(ROWS, COLS, initialValue, matrix);
     }
 
     // Subset buffer initialization
@@ -91,7 +92,6 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
 
     if (scatterStatus != MPI_SUCCESS){
         printf("[Error] MPI_Scatter\n");
-        return EXIT_FAILURE;
     }
 
     // for(int k = 1; k <= iterations; k++) {
@@ -102,22 +102,30 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     //         }
     //     }
     // }
+
+    if (cpuRank == MASTER_THREAD){
+        gettimeofday(&timestamp_e, NULL);
+    
+        printMatrix(ROWS, COLS, matrix);
+        printRuntime(timestamp_s, timestamp_e);
+        deallocateMatrix(ROWS, matrix);
+    }
 }
 
-void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, int ** matrix) {
-    for(int k = 1; k <= iterations; k++) {
-        for(int i = 0; i < rows; i++) {
-            usleep(1000);
-            matrix[i][0] = matrix[i][0] + (i * k);
-        }
+void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, int initialValue) {
+    // for(int k = 1; k <= iterations; k++) {
+    //     for(int i = 0; i < rows; i++) {
+    //         usleep(1000);
+    //         matrix[i][0] = matrix[i][0] + (i * k);
+    //     }
 
-        for(int j = 1; j < cols; j++) {
-            for(int i = 0; i < rows; i++) {
-                usleep(1000);
-                matrix[i][j] = matrix[i][j] + matrix[i][j - 1] * k;
-            }
-        }
-    }
+    //     for(int j = 1; j < cols; j++) {
+    //         for(int i = 0; i < rows; i++) {
+    //             usleep(1000);
+    //             matrix[i][j] = matrix[i][j] + matrix[i][j - 1] * k;
+    //         }
+    //     }
+    // }
 }
 
 int main(int argc, char* argv[]) {
@@ -131,33 +139,24 @@ int main(int argc, char* argv[]) {
     int initialValue = atoi(argv[2]);
     int iterations = atoi(argv[3]);
 
+    struct timespec ts_sleep;
+    ts_sleep.tv_sec = 0;
+    ts_sleep.tv_nsec = 1000000L;
 
     // ---------------initialize MPI environment
     MPI_Init(&argc, &argv);
 
-    
-
-    int ** matrix = allocateMatrix(ROWS, COLS);
-    initializeMatrix(ROWS, COLS, initialValue, matrix);
-
-    gettimeofday(&timestamp_s, NULL);
-
     if (problemChoice == 1){
-        solveFirst(subMatrix, cellsPerSubMatrix, iterations);
+        solveFirst(ROWS, COLS, iterations, ts_sleep, initialValue);
     }
     else if (problemChoice == 2){
-        solveSecond(subMatrix, cellsPerSubMatrix, iterations);
+        solveSecond(ROWS, COLS, iterations, ts_sleep, initialValue);
     }
     else{
         printf("[Error] Select valid problem choice\n");
         return EXIT_FAILURE;
     }
-
-    gettimeofday(&timestamp_e, NULL);
     
-    printMatrix(ROWS, COLS, matrix);
-    printRuntime(timestamp_s, timestamp_e);
-    deallocateMatrix(ROWS, matrix);
-
+    MPI_Finalize();
     return EXIT_SUCCESS;
 }
