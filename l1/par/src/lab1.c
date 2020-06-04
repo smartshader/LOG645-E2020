@@ -79,23 +79,85 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     // get number of cells in each process
     // ex: if matrix is 64, instance/proc size 16, each process (subMatrix) manages 4 cells
     int numberOfCellsPerProcessor = (matrixSize) / instanceSize;
-    int *subMatrix = (int *)malloc(sizeof(int) * numberOfCellsPerProcessor);
+    int dimensionPerProcessor = numberOfCellsPerProcessor / 2;
+    // int *subMatrix = (int *)malloc(sizeof(int) * numberOfCellsPerProcessor);
 
-    // SCATTER STAGE - scatters from root proc to all process
-    int scatterStatus = MPI_Scatter(globalMatrix, 
-                                    numberOfCellsPerProcessor, 
-                                    MPI_INT, 
-                                    subMatrix, 
-                                    numberOfCellsPerProcessor, 
-                                    MPI_INT, 
-                                    0, 
-                                    MPI_COMM_WORLD);
+    int **subMatrix = allocateMatrix(numberOfCellsPerProcessor/2, numberOfCellsPerProcessor/2);
 
-    if (scatterStatus != MPI_SUCCESS){
-        printf("[Error] MPI_Scatter\n");
+    // subtype creation...
+    int globalDimensions[2] = {ROWS,COLS};
+    int subDimensions[2] = {dimensionPerProcessor, dimensionPerProcessor};
+    int startingPosition[2] = {0,0};
+    MPI_Datatype type, subType;
+    MPI_Type_create_subarray(2, globalDimensions, subDimensions, startingPosition, MPI_ORDER_C, MPI_INT, &type);
+    MPI_Type_create_resized(type, 0, (dimensionPerProcessor)*sizeof(int), &subType);
+    MPI_Type_commit(&subType);
+
+    int *globalMatrixPointer=NULL;
+    if (cpuRank == MASTER_THREAD)
+        globalMatrixPointer = &(globalMatrix[0][0]);
+
+    int scatterCount[numberOfCellsPerProcessor];
+    int displacement[numberOfCellsPerProcessor];
+
+    if (cpuRank == MASTER_THREAD){
+
+        for (int i = 0; i < numberOfCellsPerProcessor; i++){
+            scatterCount[i] = 1;
+        }
+
+        int displacementIterator = 0;
+
+        for (int i = 0; i < dimensionPerProcessor; i++){
+            for (int j = 0; j < dimensionPerProcessor; j++){
+                displacement[i * dimensionPerProcessor * j] = displacementIterator;
+                displacementIterator++;
+            }
+
+            displacementIterator += (numberOfCellsPerProcessor-1)*dimensionPerProcessor;
+        }
     }
 
-    printf("CPU: %3d, Size: %3d, subMatSize: %3d \n", cpuRank, instanceSize, numberOfCellsPerProcessor);
+
+    // SCATTER STAGE - scatters from root proc to all process
+    // int scatterStatus = MPI_Scatter(globalMatrix, 
+    //                                 numberOfCellsPerProcessor, 
+    //                                 MPI_INT, 
+    //                                 subMatrix, 
+    //                                 numberOfCellsPerProcessor, 
+    //                                 MPI_INT, 
+    //                                 0, 
+    //                                 MPI_COMM_WORLD);
+
+    // if (scatterStatus != MPI_SUCCESS){
+    //     printf("[Error] MPI_Scatter\n");
+    // }
+
+    // MPI_Scatterv(globalMatrixPointer, 
+    //             scatterCount, 
+    //             displacement, 
+    //             subType, 
+    //             &(subMatrix[0][0]), 
+    //             instanceSize,
+    //             MPI_INT,
+    //             0,
+    //             MPI_COMM_WORLD);
+
+    // for (int p=0; p<instanceSize; p++) {
+    //     if (cpuRank == p) {
+    //         printf("Local process on rank %d is:\n", cpuRank);
+    //         for (int i=0; i<instanceSize; i++) {
+    //             putchar('|');
+    //             for (int j=0; j<instanceSize; j++) {
+    //                 printf("%2d ", subMatrix[i][j]);
+    //             }
+    //             printf("|\n");
+    //         }
+    //     }
+    //     MPI_Barrier(MPI_COMM_WORLD);
+    // }
+
+    //printf("CPU: %3d, Size: %3d, subMatSize: %3d \n", cpuRank, instanceSize, numberOfCellsPerProcessor);
 
     // for(int k = 1; k <= iterations; k++) {
     //     for(int j = 0; j < cols; j++) {
