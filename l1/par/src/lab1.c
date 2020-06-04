@@ -55,8 +55,9 @@ void printRuntime(struct timeval tvs, struct timeval tve) {
 
 void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, int initialValue) {
 
-    int instanceSize, cpuRank;
+    int instanceSize;
     MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
+    int cpuRank;
     MPI_Comm_rank(MPI_COMM_WORLD, &cpuRank);
 
     struct timeval timestamp_s;
@@ -71,6 +72,22 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
         matrix = allocateMatrix(ROWS, COLS);
         matrix = initMatrix(ROWS, COLS, initialValue, matrix);
     }
+
+    // Subset buffer initialization
+    // get number of cells in each process
+    // ex: if matrix is 64, instance/proc size 16, each process (subMatrix) manages 4 cells
+    int numberOfCellsPerProcessor = (matrixSize) / instanceSize;
+    int *subMatrix = (int *)malloc(sizeof(int) * numberOfCellsPerProcessor);
+
+    // SCATTER STAGE - scatters from root proc to all process
+    int scatterStatus = MPI_Scatter(matrix, 
+                                    numberOfCellsPerProcessor, 
+                                    MPI_INT, 
+                                    subMatrix, 
+                                    numberOfCellsPerProcessor, 
+                                    MPI_INT, 
+                                    0, 
+                                    MPI_COMM_WORLD);
 
     // for(int k = 1; k <= iterations; k++) {
     //     for(int j = 0; j < cols; j++) {
