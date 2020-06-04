@@ -94,18 +94,20 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
         printf("[Error] MPI_Scatter\n");
     }
 
-    // for(int k = 1; k <= iterations; k++) {
-    //     for(int j = 0; j < cols; j++) {
-    //         for(int i = 0; i < rows; i++) {
-    //             usleep(1000);
-    //             matrix[i][j] = matrix[i][j] + (i + j) * k;
-    //         }
-    //     }
-    // }
+    for(int k = 1; k <= iterations; k++) {
+        for(int j = 0; j < cols; j++) {
+            for(int i = 0; i < rows; i++) {
+                usleep(1000);
+                matrix[i][j] = matrix[i][j] + (i + j) * k;
+            }
+        }
+    }
+
+    printf("CPU: %6d, Size: %6d \n", cpuRank, instanceSize);
 
     if (cpuRank == MASTER_THREAD){
+        
         gettimeofday(&timestamp_e, NULL);
-    
         printMatrix(ROWS, COLS, matrix);
         printRuntime(timestamp_s, timestamp_e);
         deallocateMatrix(ROWS, matrix);
