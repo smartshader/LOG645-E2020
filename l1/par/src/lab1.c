@@ -75,7 +75,7 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
 
     // Subset buffer initialization
     // get number of cells in each process
-    // ex: if matrix is 64, instance/proc size 16, each process (subMatrix) manages 4 cells
+    // ex: if matrix is 64, instance/proc size 64, each process (subMatrix) manages 1 cells
     int numberOfCellsPerProcessor = (matrixSize) / instanceSize;
     int *subMatrix = (int *)malloc(sizeof(int) * numberOfCellsPerProcessor);
 
@@ -88,6 +88,11 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
                                     MPI_INT, 
                                     0, 
                                     MPI_COMM_WORLD);
+
+    if (scatterStatus != MPI_SUCCESS){
+        printf("[Error] MPI_Scatter\n");
+        return EXIT_FAILURE;
+    }
 
     // for(int k = 1; k <= iterations; k++) {
     //     for(int j = 0; j < cols; j++) {
