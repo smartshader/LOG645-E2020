@@ -76,7 +76,7 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
 
     // Subset buffer initialization
     // get number of cells in each process
-    // ex: if matrix is 64, instance/proc size 64, each process (subMatrix) manages 1 cells
+    // ex: if matrix is 64, instance/proc size 16, each process (subMatrix) manages 4 cells
     int numberOfCellsPerProcessor = (matrixSize) / instanceSize;
     int *subMatrix = (int *)malloc(sizeof(int) * numberOfCellsPerProcessor);
 
@@ -94,16 +94,38 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
         printf("[Error] MPI_Scatter\n");
     }
 
-    for(int k = 1; k <= iterations; k++) {
-        for(int j = 0; j < cols; j++) {
-            for(int i = 0; i < rows; i++) {
-                usleep(1000);
-                matrix[i][j] = matrix[i][j] + (i + j) * k;
-            }
-        }
-    }
+    printf("CPU: %3d, Size: %3d, subMatSize: %3d \n", cpuRank, instanceSize, numberOfCellsPerProcessor);
 
-    printf("CPU: %6d, Size: %6d \n", cpuRank, instanceSize);
+    // for(int k = 1; k <= iterations; k++) {
+    //     for(int j = 0; j < cols; j++) {
+    //         for(int i = 0; i < rows; i++) {
+    //             usleep(1000);
+    //             matrix[i][j] = matrix[i][j] + (i + j) * k;
+    //         }
+    //     }
+    // }
+
+    // for(int k = 1; k <= iterations; k++) {
+    //     for(int j = 0; j < numberOfCellsPerProcessor; j++) {
+    //         for(int i = 0; i < numberOfCellsPerProcessor; i++) {
+    //             usleep(1000);
+    //             subMatrix[i] = subMatrix[i] + (i + j) * k;
+    //         }
+    //     }
+    // }
+
+    int mpiGatherResult = MPI_Gather(subMatrix, 
+                                numberOfCellsPerProcessor, 
+                                MPI_INT, 
+                                matrix, 
+                                numberOfCellsPerProcessor, 
+                                MPI_INT, 
+                                0, 
+                                MPI_COMM_WORLD);
+
+    if (mpiGatherResult != MPI_SUCCESS){
+        printf("[Error] MPI_Gather\n");
+    }
 
     if (cpuRank == MASTER_THREAD){
         
