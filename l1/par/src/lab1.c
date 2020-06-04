@@ -64,14 +64,15 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     struct timeval timestamp_s;
     struct timeval timestamp_e;
 
-    // initialize Matrix with initial value on root process
+    // initialize Matrix with initial value on root process, print it 
     int matrixSize = ROWS * COLS;
-    int ** matrix = NULL;
+    int ** globalMatrix = NULL;
 
     if (cpuRank == MASTER_THREAD){
         gettimeofday(&timestamp_s, NULL);
-        matrix = allocateMatrix(ROWS, COLS);
-        initializeMatrix(ROWS, COLS, initialValue, matrix);
+        globalMatrix = allocateMatrix(ROWS, COLS);
+        initializeMatrix(ROWS, COLS, initialValue, globalMatrix);
+        printMatrix(ROWS, COLS, globalMatrix);
     }
 
     // Subset buffer initialization
@@ -81,7 +82,7 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     int *subMatrix = (int *)malloc(sizeof(int) * numberOfCellsPerProcessor);
 
     // SCATTER STAGE - scatters from root proc to all process
-    int scatterStatus = MPI_Scatter(matrix, 
+    int scatterStatus = MPI_Scatter(globalMatrix, 
                                     numberOfCellsPerProcessor, 
                                     MPI_INT, 
                                     subMatrix, 
@@ -117,7 +118,7 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     int mpiGatherResult = MPI_Gather(subMatrix, 
                                 numberOfCellsPerProcessor, 
                                 MPI_INT, 
-                                matrix, 
+                                globalMatrix, 
                                 numberOfCellsPerProcessor, 
                                 MPI_INT, 
                                 0, 
@@ -130,9 +131,9 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     if (cpuRank == MASTER_THREAD){
         
         gettimeofday(&timestamp_e, NULL);
-        printMatrix(ROWS, COLS, matrix);
+        printMatrix(ROWS, COLS, globalMatrix);
         printRuntime(timestamp_s, timestamp_e);
-        deallocateMatrix(ROWS, matrix);
+        deallocateMatrix(ROWS, globalMatrix);
     }
 }
 
