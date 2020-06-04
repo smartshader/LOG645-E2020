@@ -1,0 +1,23 @@
+linux16:>mpicc -o main main.c
+linux16:>mpiexec -n 4 main Global array is:
+ 1  2  3  4
+ 5  6  7  8
+ 9 10 11 12
+13 14 15 16
+Local process on rank 0 is:
+| 1  2 |
+| 5  6 |
+Local process on rank 1 is:
+| 3  4 |
+| 7  8 |
+Local process on rank 2 is:
+| 9 10 |
+|13 14 |
+Local process on rank 3 is:
+|11 12 |
+|15 16 |
+Processed grid:
+ 2  3  4  5
+ 6  7  8  9
+10 11 12 13
+14 15 16 17
