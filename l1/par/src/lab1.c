@@ -8,7 +8,7 @@
 #define ROWS 8
 #define COLS 8
 #define MASTER_THREAD 0
-#define LEN_PROCESSMATRIX 4;
+#define LEN_PROCESSMATRIX 4
 
 int ** allocateMatrix(int rows, int cols) {
 
@@ -114,17 +114,33 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     if (cpuRank == MASTER_THREAD)
         globalMatrixPointer = &(globalMatrix[0][0]);
 
-    // int scatterCount[numberOfCellsPerProcessor];
+    // int sendCounts[numberOfCellsPerProcessor];
     // int displacement[numberOfCellsPerProcessor];
 
-    int *scatterCount = malloc(sizeof(int)*instanceSize);
-    int *displacement = malloc(sizeof(int)*instanceSize);
+    // int *sendCounts = malloc(sizeof(int)*instanceSize);
+    // int *displacement = malloc(sizeof(int)*instanceSize);
+
+    int sendCounts[instanceSize];
+    int displacement[instanceSize];
 
     if (cpuRank == MASTER_THREAD){
 
         for (int i = 0; i < instanceSize; i++){
-            scatterCount[i] = numberOfCellsPerProcessor;
+            sendCounts[i] = numberOfCellsPerProcessor;
         }
+
+        // int displacementIterator = 0;
+
+        // for (int i = 0; i < lengthOfProcessingGrid; i++){
+        //     for (int j = 0; j < lengthOfProcessingGrid; j++){
+        //         displacement[i * lengthOfProcessingGrid + j] = displacementIterator;
+        //         printf("%4p , %2d ", (void*)&displacement[i * lengthOfProcessingGrid + j], displacementIterator);
+        //         displacementIterator++;
+        //     }
+        //     printf("\n");
+        //     displacementIterator += (lengthOfProcessor - 1)*lengthOfProcessingGrid;
+        // }
+        // printf("\n");
 
         int displacementIterator = 0;
 
@@ -132,27 +148,60 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
             for (int j = 0; j < lengthOfProcessingGrid; j++){
                 displacement[i * lengthOfProcessingGrid + j] = displacementIterator;
                 printf("%4p , %2d ", (void*)&displacement[i * lengthOfProcessingGrid + j], displacementIterator);
-                displacementIterator++;
+                displacementIterator += 1;
             }
             printf("\n");
-            displacementIterator += (lengthOfProcessor - 1)*lengthOfProcessingGrid;
+            displacementIterator += ((ROWS/LEN_PROCESSMATRIX) - 1)*LEN_PROCESSMATRIX;
         }
         printf("\n");
+
     }
 
 
 // NOTES : WHEN USING https://stackoverflow.com/questions/41660972/mpi-scatterv-dont-work-well
 
     // SCATTER STAGE - scatters from root proc to all process
-    // MPI_Scatterv(globalMatrixPointer, 
-    //             scatterCount, 
-    //             displacement, 
-    //             subType, 
-    //             &(subMatrix[0][0]), 
-    //             instanceSize,
-    //             MPI_INT,
-    //             0,
-    //             MPI_COMM_WORLD);
+    MPI_Scatterv(globalMatrixPointer, 
+                sendCounts, 
+                displacement, 
+                subType, 
+                &(subMatrix[0][0]), 
+                ROWS*COLS/(LEN_PROCESSMATRIX*LEN_PROCESSMATRIX),
+                MPI_INT,
+                0,
+                MPI_COMM_WORLD);
+
+    /* now all subMatrix print their local data: */
+
+    // for (int p=0; p<instanceSize; p++) {
+
+    //     if (cpuRank == p) {
+
+    //         printf("Local process on rank %d is:\n", cpuRank);
+    //         for (int i=0; i < ROWS/LEN_PROCESSMATRIX; i++) {
+    //             putchar('|');
+    //             for (int j=0; j< ROWS/LEN_PROCESSMATRIX; j++) {
+    //                 printf("%6d ", subMatrix[i][j]);
+    //             }
+    //             printf("\n");
+    //         }
+    //     }
+    //     MPI_Barrier(MPI_COMM_WORLD);
+    // }
+
+    MPI_Gatherv(&(subMatrix[0][0]), 
+                ROWS*COLS/(LEN_PROCESSMATRIX*LEN_PROCESSMATRIX),  
+                MPI_INT,
+                globalMatrixPointer, 
+                sendCounts, 
+                displacement, 
+                subType,
+                0, 
+                MPI_COMM_WORLD);
+    
+    deallocateMatrix(LEN_PROCESSMATRIX, &subMatrix);
+
+    MPI_Type_free(&subType);
 
     // int scatterStatus = MPI_Scatter(globalMatrix, 
     //                                 numberOfCellsPerProcessor, 
