@@ -82,8 +82,6 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     int totalCellsInMatrix = ROWS * COLS;
     int ** globalMatrix = NULL;
     int ** subMatrix = NULL;
-    int rem = totalCellsInMatrix % instanceSize;
-    int sum = 0;
 
     if (cpuRank == MASTER_THREAD){
         gettimeofday(&timestamp_s, NULL);
@@ -117,56 +115,61 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
 
     int *globalMatrixPointer = NULL;
 
-    if (cpuRank == MASTER_THREAD)
-        globalMatrixPointer = &(globalMatrix[0][0]);
-
+    // sendCounts and disp should be == 16
     // int sendCounts[numberOfCellsPerProcessor];
     // int displacement[numberOfCellsPerProcessor];
 
-    int *sendCounts = malloc(sizeof(int)*instanceSize);
-    int *displacement = malloc(sizeof(int)*instanceSize);
+    // int *sendCounts = malloc(sizeof(int)*instanceSize);
+    // int *displacement = malloc(sizeof(int)*instanceSize);
 
-    // int sendCounts[LEN_PROCESSMATRIX*LEN_PROCESSMATRIX];
-    // int displacement[LEN_PROCESSMATRIX*LEN_PROCESSMATRIX];
+    int sendCounts[LEN_PROCESSMATRIX*LEN_PROCESSMATRIX];
+    int displacement[LEN_PROCESSMATRIX*LEN_PROCESSMATRIX];
+
+    // int *sendCounts = NULL;
+    // int *displacement = NULL;
 
     if (cpuRank == MASTER_THREAD){
+        globalMatrixPointer = &(globalMatrix[0][0]);
+    }
+
+    if (cpuRank == MASTER_THREAD){
+
+        // sendCounts = malloc(sizeof(int)*instanceSize);
+        // displacement = malloc(sizeof(int)*instanceSize);
+
         printf("--sendCount--\n");
         for (int i = 0; i < LEN_PROCESSMATRIX*LEN_PROCESSMATRIX; i++){
-            sendCounts[i] = numberOfCellsPerProcessor;
+            sendCounts[i] = 1;
             printf("CPU %2d, %4p , %2d \n", i, (void*)&sendCounts[i], sendCounts[i]);
         }
 
         printf("\n");
 
-        printf("--submatrix displacement @ 0 enclosed\n");
+        printf("--procDisplacement @ 0 enclosed\n");
         // submatrix dispalcement
-        int displacementIterator = 0;
+        int offsetDisp = 0;
 
         for (int i = 0; i < lengthOfProcessingGrid; i++){
             for (int j = 0; j < lengthOfProcessingGrid; j++){
-                displacement[i * lengthOfProcessingGrid + j] = displacementIterator;
-                printf("%4p , i: %2d, d: %2d ", (void*)&displacement[i * lengthOfProcessingGrid + j], displacementIterator, displacement[i * lengthOfProcessingGrid + j]);
-                displacementIterator++;
+                displacement[i * lengthOfProcessingGrid + j] = offsetDisp;
+                printf("%4p , i: %2d, d: %2d ", (void*)&displacement[i * lengthOfProcessingGrid + j], offsetDisp, displacement[i * lengthOfProcessingGrid + j]);
+                //offsetDisp++;
+                offsetDisp += 1;
             }
             printf("\n");
             //displacementIterator += (ROWS/LEN_PROCESSMATRIX - 1)*LEN_PROCESSMATRIX;
             //displacementIterator++;
+            offsetDisp += ((ROWS/LEN_PROCESSMATRIX)-1)*LEN_PROCESSMATRIX;
         }
         printf("\n");
 
     }
 
-    printf("\n");
-
-    // submatrix dispalcement printouts
-    printf("--submatrix displacement @ %2d-- external\n", cpuRank);
-    for (int i = 0; i < lengthOfProcessingGrid; i++){
-        for (int j = 0; j < lengthOfProcessingGrid; j++){
-            printf("%4p , d: %2d ", (void*)&displacement[i * lengthOfProcessingGrid + j], displacement[i * lengthOfProcessingGrid + j]);
-        }
-        printf("\n");
-    }
-    printf("\n");
+    // /* Initialize sendcount and displacements arrays */
+    // for (int i=0; i<LEN_PROCESSMATRIX*LEN_PROCESSMATRIX; i++) {
+    //     sendCounts[i] = numberOfCellsPerProcessor;
+    //     displacement[i] = i*lengthOfProcessingGrid;
+    // }
 
     subMatrix = allocateMatrix(lengthOfProcessor, lengthOfProcessor);
 
@@ -174,18 +177,38 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
 
     // SCATTER STAGE - scatters from root proc to all process
     int scatterStatus = MPI_Scatterv(globalMatrixPointer, 
-                sendCounts, 
-                displacement, 
-                subType, 
-                &(subMatrix[0][0]), 
-                ROWS*COLS/(LEN_PROCESSMATRIX*LEN_PROCESSMATRIX),
-                MPI_INT,
-                0,
-                MPI_COMM_WORLD);
+                                        sendCounts, 
+                                        displacement, 
+                                        subType, 
+                                        &(subMatrix[0][0]), 
+                                        ROWS*COLS/(LEN_PROCESSMATRIX*LEN_PROCESSMATRIX),
+                                        MPI_INT,
+                                        0,
+                                        MPI_COMM_WORLD);
 
     if (scatterStatus != MPI_SUCCESS){
         printf("[Error] MPI_Scatter\n");
         return;
+    }
+
+    // // submatrix dispalcement printouts
+    // printf("--procDisplacement @ %2d-- external\n", cpuRank);
+    // for (int i = 0; i < lengthOfProcessingGrid; i++){
+    //     for (int j = 0; j < lengthOfProcessingGrid; j++){
+    //         printf("%4p , d: %2d ", (void*)&displacement[i * lengthOfProcessingGrid + j], displacement[i * lengthOfProcessingGrid + j]);
+    //     }
+    //     printf("\n");
+    // }
+    // printf("\n");
+
+    for(int k = 1; k <= iterations; k++) {
+        for(int j = 0; j < ROWS/LEN_PROCESSMATRIX; j++) {
+            for(int i = 0; i < ROWS/LEN_PROCESSMATRIX; i++) {
+                usleep(1000);
+                //subMatrix[i][j] = subMatrix[i][j] + (i + j) * k;
+                subMatrix[i][j] = subMatrix[i][j] + 1;
+            }
+        }
     }
 
     // print submatrix
@@ -194,7 +217,7 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
 
         if (cpuRank == p) {
 
-            printf("Local process on rank %d is: , d: %2d, nD: %2d\n", cpuRank, displacement[cpuRank], displacement[cpuRank+1]);
+            printf("Local process on rank %d is: \n", cpuRank);
             for (int i=0; i < ROWS/LEN_PROCESSMATRIX; i++) {
                 putchar('|');
                 for (int j=0; j< ROWS/LEN_PROCESSMATRIX; j++) {
@@ -216,8 +239,6 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
                 0, 
                 MPI_COMM_WORLD);
     
-    deallocateMatrix(LEN_PROCESSMATRIX, subMatrix);
-
     MPI_Type_free(&subType);
 
     // int scatterStatus = MPI_Scatter(globalMatrix, 
