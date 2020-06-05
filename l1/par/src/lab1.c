@@ -10,20 +10,21 @@
 #define MASTER_THREAD 0
 
 int ** allocateMatrix(int rows, int cols) {
+    
+    // necessary if we want to allocate contiguously
+    int *temp = (int *)malloc(rows*cols*sizeof(int));
     int ** matrix = (int **) malloc(rows * sizeof(int *));
 
     for(int i = 0; i < rows; i++) {
-        matrix[i] = (int *) malloc(cols * sizeof(int));
+        matrix[i] = &(temp[cols*i]);
     }
 
     return matrix;
 }
 
 void deallocateMatrix(int rows, int ** matrix) {
-    for(int i = 0; i < rows; i++) {
-        free(matrix[i]);
-    }
 
+    free(matrix[0]);
     free(matrix);
 }
 
