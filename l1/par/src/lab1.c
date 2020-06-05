@@ -211,23 +211,23 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
         }
     }
 
-    // print submatrix
+    // // print submatrix
 
-    for (int p=0; p<instanceSize; p++) {
+    // for (int p=0; p<instanceSize; p++) {
 
-        if (cpuRank == p) {
+    //     if (cpuRank == p) {
 
-            printf("Local process on rank %d is: \n", cpuRank);
-            for (int i=0; i < ROWS/LEN_PROCESSMATRIX; i++) {
-                putchar('|');
-                for (int j=0; j< ROWS/LEN_PROCESSMATRIX; j++) {
-                    printf("%6d ", subMatrix[i][j]);
-                }
-                printf("\n");
-            }
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-    }
+    //         printf("Local process on rank %d is: \n", cpuRank);
+    //         for (int i=0; i < ROWS/LEN_PROCESSMATRIX; i++) {
+    //             putchar('|');
+    //             for (int j=0; j< ROWS/LEN_PROCESSMATRIX; j++) {
+    //                 printf("%6d ", subMatrix[i][j]);
+    //             }
+    //             printf("\n");
+    //         }
+    //     }
+    //     MPI_Barrier(MPI_COMM_WORLD);
+    // }
 
     MPI_Gatherv(&(subMatrix[0][0]), 
                 ROWS*COLS/(LEN_PROCESSMATRIX*LEN_PROCESSMATRIX),  
