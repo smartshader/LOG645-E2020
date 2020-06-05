@@ -1,5 +1,10 @@
 {
     "files.associations": {
-        "array": "c"
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c",
+        "type_traits": "c",
+        "string": "c"
     }
 }

@@ -1,3 +1,4 @@
+// https://stackoverflow.com/questions/9269399/sending-blocks-of-2d-array-in-c-using-mpi/9271753#9271753
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
