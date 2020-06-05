@@ -1,0 +1,17 @@
+=== memory addresses in C
+between column 6, 7, where A,B are types int
+
+Coord  = Memory address
+A[0,6] = 0x56188c8692f8
+B[0,7] = 0x56188c8692fc     difference b-a = 4
+
+between row 0,1 where A,B are types int
+Coord  = Memory address
+A[0,7] = 0x56188c8692fc
+B[1,0] = 0x56188c867150     difference B-A = 4
+
+[[ AFTER MOD to become contiguous ]]
+
+Coord  = Memory address
+A[0,7] = 0x55631758570c
+B[1,0] = 0x556317585710    difference B-A = 4
