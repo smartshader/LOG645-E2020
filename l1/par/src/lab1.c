@@ -9,10 +9,16 @@
 #define COLS 8
 #define MASTER_THREAD 0
 #define LEN_PROCESSMATRIX 4
+#define LEN_MATRIX 8
+
+struct position{
+    int i_position;
+    int j_position;
+}cpuCoordinates[LEN_PROCESSMATRIX*LEN_PROCESSMATRIX];
 
 int ** allocateMatrix(int rows, int cols) {
 
-    // necessary if we want to allocate contiguously
+    // necessary to allocate contiguously
     int *temp = (int *)malloc(rows*cols*sizeof(int));
     int ** matrix = (int **) malloc(rows * sizeof(int *));
 
@@ -27,6 +33,18 @@ void deallocateMatrix(int rows, int ** matrix) {
 
     free(matrix[0]);
     free(matrix);
+}
+
+void initializeCPUGrid(){
+    int cellId = 0;
+
+    for (int i = 0; i < LEN_PROCESSMATRIX; ++i){
+        for (int j = 0; j < LEN_PROCESSMATRIX; ++j){
+            cpuCoordinates[cellId].i_position = i;
+            cpuCoordinates[cellId].j_position = j;
+            ++cellId;
+        }
+    }
 }
 
 void initializeMatrix(int rows, int cols, int initialValue, int ** matrix) {
@@ -86,9 +104,7 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     if (cpuRank == MASTER_THREAD){
         gettimeofday(&timestamp_s, NULL);
         globalMatrix = allocateMatrix(ROWS, COLS);
-
         initializeMatrix(ROWS, COLS, initialValue, globalMatrix);
-
         printMatrix(ROWS, COLS, globalMatrix);
        // printMatrixMemAddress(ROWS, COLS, globalMatrix);
     }
@@ -201,23 +217,28 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     // }
     // printf("\n");
 
+    // calculate submatrix
+
+    int i_origin = cpuCoordinates[cpuRank].i_position*2;
+    int j_origin = cpuCoordinates[cpuRank].j_position*2;
+
     for(int k = 1; k <= iterations; k++) {
         for(int j = 0; j < ROWS/LEN_PROCESSMATRIX; j++) {
             for(int i = 0; i < ROWS/LEN_PROCESSMATRIX; i++) {
                 usleep(1000);
                 //subMatrix[i][j] = subMatrix[i][j] + (i + j) * k;
-                subMatrix[i][j] = subMatrix[i][j] + 1;
+                subMatrix[i][j] = subMatrix[i][j] + (i_origin + i + j_origin + j)*k;
             }
         }
     }
 
-    // // print submatrix
+    // // START print submatrix-----------
 
     // for (int p=0; p<instanceSize; p++) {
 
     //     if (cpuRank == p) {
 
-    //         printf("Local process on rank %d is: \n", cpuRank);
+    //         printf("Local process on rank %d [%2d,%2d] is: \n", cpuRank, cpuCoordinates[cpuRank].i_position, cpuCoordinates[cpuRank].j_position);
     //         for (int i=0; i < ROWS/LEN_PROCESSMATRIX; i++) {
     //             putchar('|');
     //             for (int j=0; j< ROWS/LEN_PROCESSMATRIX; j++) {
@@ -228,6 +249,8 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     //     }
     //     MPI_Barrier(MPI_COMM_WORLD);
     // }
+
+    // // END print submatrix-----------
 
     MPI_Gatherv(&(subMatrix[0][0]), 
                 ROWS*COLS/(LEN_PROCESSMATRIX*LEN_PROCESSMATRIX),  
@@ -334,6 +357,8 @@ int main(int argc, char* argv[]) {
     struct timespec ts_sleep;
     ts_sleep.tv_sec = 0;
     ts_sleep.tv_nsec = 1000000L;
+
+    initializeCPUGrid();
 
     // ---------------initialize MPI environment
     MPI_Init(&argc, &argv);
