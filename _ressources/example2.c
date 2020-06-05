@@ -69,6 +69,7 @@ int main(int argc, char **argv) {
     }
 
     /* create the local array which we'll process */
+    // in this case, gridsize is 10 x 10, proc grid size is 2 x 2
     malloc2dchar(&local, gridsize/procgridsize, gridsize/procgridsize);
 
     /* create a datatype to describe the subarrays of the global array */
