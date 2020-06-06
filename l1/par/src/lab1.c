@@ -7,60 +7,69 @@
 
 #define ROWS 8
 #define COLS 8
-#define MATRIX_LEN 10
 #define MASTER_THREAD 0
+#define LEN_PROCESSMATRIX 4
+#define LEN_MATRIX 8
 
 struct position{
     int i_position;
     int j_position;
-}coord[ROWS*COLS];
+}cpuCoordinates[LEN_PROCESSMATRIX*LEN_PROCESSMATRIX];
 
-int *initMatrix(int matrixSize, int initialValue) {
-    int *matrix = (int *) malloc(sizeof(int) * matrixSize);
+int ** allocateMatrix(int rows, int cols) {
 
-    int rowIdentifier = 0;
-
-    for (int matrixRowIterator = 0; matrixRowIterator < matrixSize; matrixRowIterator+=MATRIX_LEN){
-
-        for (int rowIterator = 0; rowIterator < MATRIX_LEN; rowIterator++){
-            if (rowIterator == 0){
-                matrix[matrixRowIterator] = initialValue;
-            }
-            else if (rowIterator == 1){
-                matrix[matrixRowIterator + 1] = rowIdentifier;
-            }
-            else{
-                matrix[matrixRowIterator + rowIterator] = initialValue;
-            }
-        }
-        rowIdentifier++;
+    // necessary to allocate contiguously
+    int *temp = (int *)malloc(rows*cols*sizeof(int));
+    int ** matrix = (int **) malloc(rows * sizeof(int *));
+    for(int i = 0; i < rows; i++) {
+        matrix[i] = &(temp[cols*i]);
     }
+
     return matrix;
 }
 
-void printMatrix(int *matrix, int matrixSize) {
-    int colID = 0;
+void deallocateMatrix(int rows, int ** matrix) {
+    free(matrix[0]);
+    free(matrix);
+}
 
-    for (int rowID = 0; rowID < matrixSize; rowID+=MATRIX_LEN){
-        printf("%10d ", matrix[rowID]);
-        colID++;
-        if ((colID % COLS) == 0 && rowID != 0){
-            colID = 0;
-            printf("\n");
+void initializeCPUGrid(){
+    int cellId = 0;
+    for (int i = 0; i < LEN_PROCESSMATRIX; ++i){
+        for (int j = 0; j < LEN_PROCESSMATRIX; ++j){
+            cpuCoordinates[cellId].i_position = i;
+            cpuCoordinates[cellId].j_position = j;
+            ++cellId;
         }
+    }
+}
+
+void initializeMatrix(int rows, int cols, int initialValue, int ** matrix) {
+     for(int i = 0; i < rows; i++) {
+        for(int j = 0; j < cols; j++) {
+            matrix[i][j] = initialValue;
+        }
+    }
+}
+
+void printMatrix(int rows, int cols, int ** matrix) {
+    for(int i = 0; i < rows; i++) {
+        for(int j = 0; j < cols; j++) {
+            printf("%12d ", matrix[i][j]);
+        }
+        printf("\n");
     }
     printf("\n");
 }
 
-void initializeCoordinates(){
-    int cellId = 0;
-    for (int i = 0; i < ROWS; ++i){
-        for (int j = 0; j < COLS; ++j){
-            coord[cellId].i_position = i;
-            coord[cellId].j_position = j;
-            ++cellId;
+void printMatrixMemAddress(int rows, int cols, int ** matrix) {
+    for(int i = 0; i < rows; i++) {
+        for(int j = 0; j < cols; j++) {
+            printf("%4p ", (void*)&matrix[i][j]);
         }
+        printf("\n");
     }
+    printf("\n");
 }
 
 void printRuntime(struct timeval tvs, struct timeval tve) {
@@ -70,142 +79,192 @@ void printRuntime(struct timeval tvs, struct timeval tve) {
     printf("Runtime: %.6f seconds\n", delta / 1000000.0);
 }
 
-void printFinalResults(struct timeval timestamp_s, struct timeval timestamp_e, int *matrix, int matrixSize){
-    printf("END - Master Thread\n");
-    gettimeofday(&timestamp_e, NULL);
-    printMatrix(matrix, matrixSize);
-    printRuntime(timestamp_s, timestamp_e);
-}
+void debugPrintSubMatrix(int cpuRank, int instanceSize, int **subMatrix){
 
-int *solveFirst(int *matrix, int cellsToProcess, int iteration)
-{
-    int matrixRowIterator, k;
+    for (int p=0; p<instanceSize; p++) {
 
-    for (k = 0; k <= iteration; k++)
-    {
-        for (matrixRowIterator = 0; matrixRowIterator < cellsToProcess; matrixRowIterator += MATRIX_LEN)
-        {
-            usleep(1000);
-            int iCurrent = coord[matrix[matrixRowIterator + 1]].i_position;
-            int jCurrent = coord[matrix[matrixRowIterator + 1]].j_position;
-            matrix[matrixRowIterator] = matrix[matrixRowIterator] + (iCurrent + jCurrent) * k;
+        if (cpuRank == p) {
+
+            printf("Local process on rank %d [%2d,%2d] is: \n", cpuRank, cpuCoordinates[cpuRank].i_position, cpuCoordinates[cpuRank].j_position);
+            for (int i=0; i < ROWS/LEN_PROCESSMATRIX; i++) {
+                putchar('|');
+                for (int j=0; j< ROWS/LEN_PROCESSMATRIX; j++) {
+                    printf("%6d ", subMatrix[i][j]);
+                }
+                printf("\n");
+            }
         }
+        MPI_Barrier(MPI_COMM_WORLD);
     }
-    return matrix;
 }
 
-int *solveSecond(int *matrix, int cellsToProcess, int iteration) {
+void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, int initialValue) {
 
-    return matrix;
-}
-
-
-int main(int argc, char* argv[]) {
-
-    if(4 != argc) {
-        printf("[Err] : 3 args needed. Ex: lab1 2 0 2\n");
-        return EXIT_FAILURE;
-    }
-
-    // Parameter initialization
-    int problemChoice = atoi(argv[1]);
-    int initialValue = atoi(argv[2]);
-    int iterations = atoi(argv[3]);
+    int instanceSize;
+    MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
+    int cpuRank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &cpuRank);
 
     struct timeval timestamp_s;
     struct timeval timestamp_e;
 
-    // ---------------initialize MPI environment
-    MPI_Init(&argc, &argv);
-
-    gettimeofday(&timestamp_s, NULL);
-    int instanceSize, cpuRank;
-    MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
-
-    if ((ROWS*COLS) % instanceSize != 0){
-        printf("Multiple of 64 is required.\n");
-        MPI_Finalize();
-        return EXIT_FAILURE;
-    }
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &cpuRank);
-    
-    int cellId = 0;
-    for (int i = 0; i < ROWS; ++i){
-        for (int j = 0; j < COLS; ++j){
-            coord[cellId].i_position = i;
-            coord[cellId].j_position = j;
-            ++cellId;
-        }
-    }
-    
-    // initialize Matrix on root process
-    int matrixSize = ROWS * COLS * MATRIX_LEN;
-    int *wholeMatrix = NULL;
+    // initialize Matrix with initial value on root process, print it 
+    int ** globalMatrix = NULL;
+    int ** subMatrix = NULL;
 
     if (cpuRank == MASTER_THREAD){
-        wholeMatrix = initMatrix(matrixSize, initialValue);
+        gettimeofday(&timestamp_s, NULL);
+        globalMatrix = allocateMatrix(ROWS, COLS);
+        initializeMatrix(ROWS, COLS, initialValue, globalMatrix);
     }
 
-    // For each process, create subMatrix buffers based on cellsPerSubMatrix
-    int cellsPerSubMatrix = (matrixSize) / instanceSize;
-    int *subMatrix = (int *)malloc(sizeof(int) * cellsPerSubMatrix);
+    // subMatrix buffer initialization
+    // get number of cells in each process
+    // ex: if matrix is 64, instance/proc size 16, each process (subMatrix) manages 4 cells
+    int lengthOfGlobalMatrix = ROWS;
+    int lengthOfProcessingGrid = LEN_PROCESSMATRIX;
+    int lengthOfProcessor = lengthOfGlobalMatrix/lengthOfProcessingGrid;
 
-    // SCATTER STAGE - scatters from root proc to all process
-    int scatterStatus = MPI_Scatter(wholeMatrix, 
-                                    cellsPerSubMatrix, 
-                                    MPI_INT, 
-                                    subMatrix, 
-                                    cellsPerSubMatrix, 
-                                    MPI_INT, 
-                                    0, 
-                                    MPI_COMM_WORLD);
+    // subType creation
+    int globalDimensions[2] = {ROWS,COLS};
+    int subDimensions[2] = {lengthOfProcessor, lengthOfProcessor};
+    int startingPosition[2] = {0,0};
+    MPI_Datatype type, subType;
+    MPI_Type_create_subarray(2, globalDimensions, subDimensions, startingPosition, MPI_ORDER_C, MPI_INT, &type);
+    MPI_Type_create_resized(type, 0, (lengthOfProcessor)*sizeof(int), &subType);
+    MPI_Type_commit(&subType);
+
+    int *globalMatrixPointer = NULL;
+
+    int sendCounts[LEN_PROCESSMATRIX*LEN_PROCESSMATRIX];
+    int displacement[LEN_PROCESSMATRIX*LEN_PROCESSMATRIX];
+
+    if (cpuRank == MASTER_THREAD){
+        globalMatrixPointer = &(globalMatrix[0][0]);
+
+        printf("--sendCount--\n");
+        for (int i = 0; i < LEN_PROCESSMATRIX*LEN_PROCESSMATRIX; i++){
+            sendCounts[i] = 1;
+            //printf("CPU %2d, %4p , %2d \n", i, (void*)&sendCounts[i], sendCounts[i]);
+        }
+
+        // submatrix dispalcement
+        int offsetDisp = 0;
+
+        for (int i = 0; i < lengthOfProcessingGrid; i++){
+            for (int j = 0; j < lengthOfProcessingGrid; j++){
+                displacement[i * lengthOfProcessingGrid + j] = offsetDisp;
+                //printf("%4p , i: %2d, d: %2d ", (void*)&displacement[i * lengthOfProcessingGrid + j], offsetDisp, displacement[i * lengthOfProcessingGrid + j]);
+                offsetDisp++;
+            }
+            printf("\n");
+            offsetDisp += ((ROWS/LEN_PROCESSMATRIX)-1)*LEN_PROCESSMATRIX;
+        }
+    }
+
+    subMatrix = allocateMatrix(lengthOfProcessor, lengthOfProcessor);
+
+    // SCATTERV STAGE - scatters from root proc to all processes
+    int scatterStatus = MPI_Scatterv(globalMatrixPointer, 
+                                        sendCounts, 
+                                        displacement, 
+                                        subType, 
+                                        &(subMatrix[0][0]), 
+                                        ROWS*COLS/(LEN_PROCESSMATRIX*LEN_PROCESSMATRIX),
+                                        MPI_INT,
+                                        0,
+                                        MPI_COMM_WORLD);
 
     if (scatterStatus != MPI_SUCCESS){
         printf("[Error] MPI_Scatter\n");
+        return;
+    }
+
+    // subMatrix calculations
+
+    // extract coordinates of cpuCoordinates
+    int i_origin = cpuCoordinates[cpuRank].i_position*2;
+    int j_origin = cpuCoordinates[cpuRank].j_position*2;
+
+    for(int k = 1; k <= iterations; k++) {
+        for(int j = 0; j < ROWS/LEN_PROCESSMATRIX; j++) {
+            for(int i = 0; i < ROWS/LEN_PROCESSMATRIX; i++) {
+                usleep(1000);
+                subMatrix[i][j] = subMatrix[i][j] + (i_origin + i + j_origin + j)*k;
+            }
+        }
+    }
+
+    //debugPrintSubMatrix(cpuRank, instanceSize, subMatrix);
+
+    // gathers all subMatrix back to globalMatrix
+    MPI_Gatherv(&(subMatrix[0][0]), 
+                ROWS*COLS/(LEN_PROCESSMATRIX*LEN_PROCESSMATRIX),  
+                MPI_INT,
+                globalMatrixPointer, 
+                sendCounts, 
+                displacement, 
+                subType,
+                0, 
+                MPI_COMM_WORLD);
+    
+    MPI_Type_free(&subType);
+
+    if (cpuRank == MASTER_THREAD){
+        gettimeofday(&timestamp_e, NULL);
+        printMatrix(ROWS, COLS, globalMatrix);
+        printRuntime(timestamp_s, timestamp_e);
+        deallocateMatrix(ROWS, globalMatrix);
+        deallocateMatrix(lengthOfProcessor, subMatrix);
+    }
+}
+
+void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, int initialValue) {
+    // for(int k = 1; k <= iterations; k++) {
+    //     for(int i = 0; i < rows; i++) {
+    //         usleep(1000);
+    //         matrix[i][0] = matrix[i][0] + (i * k);
+    //     }
+
+    //     for(int j = 1; j < cols; j++) {
+    //         for(int i = 0; i < rows; i++) {
+    //             usleep(1000);
+    //             matrix[i][j] = matrix[i][j] + matrix[i][j - 1] * k;
+    //         }
+    //     }
+    // }
+}
+
+int main(int argc, char* argv[]) {
+
+    if(4 != argc) {
         return EXIT_FAILURE;
     }
 
-    // COMPUTE STAGE
-    int *singleSubMatrixCalculated = NULL;
+     // Parameter initialization
+    int problemChoice = atoi(argv[1]);
+    int initialValue = atoi(argv[2]);
+    int iterations = atoi(argv[3]);
+
+    struct timespec ts_sleep;
+    ts_sleep.tv_sec = 0;
+    ts_sleep.tv_nsec = 1000000L;
+
+    initializeCPUGrid();
+
+    MPI_Init(&argc, &argv);
 
     if (problemChoice == 1){
-        singleSubMatrixCalculated = solveFirst(subMatrix, cellsPerSubMatrix, iterations);
+        solveFirst(ROWS, COLS, iterations, ts_sleep, initialValue);
     }
     else if (problemChoice == 2){
-        singleSubMatrixCalculated = solveSecond(subMatrix, cellsPerSubMatrix, iterations);
+        solveSecond(ROWS, COLS, iterations, ts_sleep, initialValue);
     }
     else{
         printf("[Error] Select valid problem choice\n");
         return EXIT_FAILURE;
     }
-
-    // GATHER STAGE - gathers all singleSubMatrixCalculated to the root process
-    int *totalSubMatrixes = NULL;
-
-    if (cpuRank == MASTER_THREAD) {
-        totalSubMatrixes = (int *)malloc(sizeof(int) * matrixSize);
-    }
-
-    int mpiGatherResult = MPI_Gather(singleSubMatrixCalculated, 
-                                    cellsPerSubMatrix, 
-                                    MPI_INT, 
-                                    totalSubMatrixes, 
-                                    cellsPerSubMatrix, 
-                                    MPI_INT, 
-                                    0, 
-                                    MPI_COMM_WORLD);
-
-    if (mpiGatherResult != MPI_SUCCESS){
-        printf("[Error] MPI_Gather\n");
-        return EXIT_FAILURE;
-    }
-
-    if (cpuRank == MASTER_THREAD) {
-        printFinalResults(timestamp_s,timestamp_e, totalSubMatrixes, matrixSize);
-    }
-
-    MPI_Barrier(MPI_COMM_WORLD);
+    
     MPI_Finalize();
     return EXIT_SUCCESS;
 }

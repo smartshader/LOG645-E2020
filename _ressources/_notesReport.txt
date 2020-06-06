@@ -1,0 +1,31 @@
+=================== memory addresses in C
+Currently our memory is not contiguously allocated
+between column 6, 7, where A,B are types int
+
+Coord  = Memory address
+A[0,6] = 0x56188c8692f8
+B[0,7] = 0x56188c8692fc     difference b-a = 4
+
+between row 0,1 where A,B are types int
+Coord  = Memory address
+A[0,7] = 0x56188c8692fc
+B[1,0] = 0x56188c867150     difference B-A = 4
+
+[[ AFTER MOD to become contiguous ]]
+- necessary to use functions like scatterv, send/rec
+
+Coord  = Memory address
+Row to Row
+A[0,7] = 0x55631758570c
+B[1,0] = 0x556317585710    difference B-A = 4
+
+First and Last
+A[0,0] = 0x55d67f9fc4d0
+B[7,7] = 0x55d67f9fc5cc    difference B-A = 252, SO 256/4 = 64
+
+
+==========
+
+sendcount allocation : https://stackoverflow.com/questions/33614560/mpi-scatterv-doesnt-work
+
+    // NOTES : WHEN USING https://stackoverflow.com/questions/41660972/mpi-scatterv-dont-work-well
