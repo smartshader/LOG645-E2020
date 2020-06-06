@@ -25,7 +25,7 @@ void deallocateMatrix(int rows, int ** matrix) {
     free(matrix);
 }
 
-void fillMatrix(int rows, int cols, int initialValue, int ** matrix) {
+void initializeMatrix(int rows, int cols, int initialValue, int ** matrix) {
      for(int i = 0; i < rows; i++) {
         for(int j = 0; j < cols; j++) {
             matrix[i][j] = initialValue;
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
     solve = solvers[problem - 1];
 
     int ** matrix = allocateMatrix(ROWS, COLS);
-    fillMatrix(ROWS, COLS, initialValue, matrix);
+    initializeMatrix(ROWS, COLS, initialValue, matrix);
 
     gettimeofday(&timestamp_s, NULL);
     solve(ROWS, COLS, iterations, ts_sleep, matrix);
