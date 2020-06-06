@@ -27,3 +27,5 @@ B[7,7] = 0x55d67f9fc5cc    difference B-A = 252, SO 256/4 = 64
 ==========
 
 sendcount allocation : https://stackoverflow.com/questions/33614560/mpi-scatterv-doesnt-work
+
+    // NOTES : WHEN USING https://stackoverflow.com/questions/41660972/mpi-scatterv-dont-work-well
