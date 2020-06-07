@@ -130,6 +130,90 @@ MPI_Datatype createMatrixDataType(int lenSubMatrix)
     return subType;
 }
 
+// Calculating process for Problem 2 using MPI send/recv functions
+void calculationSecond(int iterations, int cpuRank, int lenCPUGrid, int lenSubMatrix, int instanceSize, int **subMatrix, int **receivedSubMatrix){
+    
+    // extract i coordinates, relative to cpuRank
+    int i_origin = cpuCoordinates[cpuRank].i_position * 2;
+    
+    for (int k = 1; k <= iterations; k++)
+    {
+
+        // initialize the first column cpuCoordinates
+        if (cpuCoordinates[cpuRank].j_position == 0)
+        {
+            // initialize first column of subMatrix
+            for (int i = 0; i < ROWS / lenCPUGrid; i++)
+            {
+                usleep(1000);
+                subMatrix[i][0] = subMatrix[i][0] + ((i_origin + i) * k);
+            }
+
+            // calculates second column of subMatrix
+            for (int j = 1; j < ROWS / lenCPUGrid; j++)
+            {
+                for (int i = 0; i < ROWS / lenCPUGrid; i++)
+                {
+                    usleep(1000);
+                    subMatrix[i][j] = subMatrix[i][j] + subMatrix[i][j - 1] * k;
+                }
+            }
+
+            // Send the processed subMatrix to the next CPU
+            MPI_Send(&(subMatrix[0][0]), lenSubMatrix * lenSubMatrix, MPI_INT, cpuRank + 1, 0, MPI_COMM_WORLD);
+        }
+        else
+        {
+
+            // Receive a processed subMatrix from the previous CPU
+            MPI_Recv(&(receivedSubMatrix[0][0]), lenSubMatrix * lenSubMatrix, MPI_INT, cpuRank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            // initialize first column of subMatrix, based on receivedSubMatrix
+            for (int i = 0; i < ROWS / lenCPUGrid; i++)
+            {
+                usleep(1000);
+                subMatrix[i][0] = subMatrix[i][0] + (receivedSubMatrix[i][1] * k);
+            }
+
+            // calculates second column of subMatrix
+            for (int j = 1; j < ROWS / lenCPUGrid; j++)
+            {
+                for (int i = 0; i < ROWS / lenCPUGrid; i++)
+                {
+                    usleep(1000);
+                    subMatrix[i][j] = subMatrix[i][j] + subMatrix[i][j - 1] * k;
+                }
+            }
+
+            // Send the processed subMatrix to the next CPU
+            if (cpuRank < instanceSize - 1)
+            {
+                MPI_Send(&(subMatrix[0][0]), lenSubMatrix * lenSubMatrix, MPI_INT, cpuRank + 1, 0, MPI_COMM_WORLD);
+            }
+        }
+    }
+}
+
+// Calculating process for Problem 1
+void calculationFirst(int iterations, int cpuRank, int lenCPUGrid, int **subMatrix){
+    
+    // extract i,j of coordinates from 4x4 CPUGrid and scale to original 8x8 globalMatrix coordinates
+    int i_origin = cpuCoordinates[cpuRank].i_position * 2;
+    int j_origin = cpuCoordinates[cpuRank].j_position * 2;
+
+    for (int k = 1; k <= iterations; k++)
+    {
+        for (int j = 0; j < ROWS / lenCPUGrid; j++)
+        {
+            for (int i = 0; i < ROWS / lenCPUGrid; i++)
+            {
+                usleep(1000);
+                subMatrix[i][j] = subMatrix[i][j] + (i_origin + i + j_origin + j) * k;
+            }
+        }
+    }
+}
+
 void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, int initialValue)
 {
     // get the number of processes in MPI world
@@ -193,10 +277,8 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
         }
     }
 
-
     subMatrix = allocateMatrix(lenSubMatrix, lenSubMatrix);
 
-    // SCATTERV STAGE - generates subMatrixes from globalMatrix
     int scatterStatus = MPI_Scatterv(globalMatrixRefPtr,
                                      sendCounts,
                                      displacement,
@@ -213,30 +295,7 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
         return;
     }
 
-    // PROBLEM #1 CALCULATIONS
-
-    // Each process contains a 2x2 subMatrix that is calculated.
-    // Instead of looping through a 8x8 matrix, we have 16 processes that
-    // loop through a 2x2 subMatrix.
-
-    // extract i,j of cpuCoordinates
-    // after extraction, multiply by 2 as it references the globalMatrix
-    // example, a cpuCoordinates of 3 is equivalent to global coordinates 6
-    int i_origin = cpuCoordinates[cpuRank].i_position * 2;
-    int j_origin = cpuCoordinates[cpuRank].j_position * 2;
-
-    // Calculations
-    for (int k = 1; k <= iterations; k++)
-    {
-        for (int j = 0; j < ROWS / lenCPUGrid; j++)
-        {
-            for (int i = 0; i < ROWS / lenCPUGrid; i++)
-            {
-                usleep(1000);
-                subMatrix[i][j] = subMatrix[i][j] + (i_origin + i + j_origin + j) * k;
-            }
-        }
-    }
+    calculationFirst(iterations, cpuRank, lenCPUGrid, subMatrix);
 
     // gathers all subMatrixes back to globalMatrix
     MPI_Gatherv(&(subMatrix[0][0]),
@@ -297,15 +356,6 @@ void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, i
         initializeMatrix(ROWS, COLS, initialValue, globalMatrix);
     }
 
-    // // subType creation
-    // int globalMatrixDim[2] = {ROWS, COLS};
-    // int subMatrixDim[2] = {totCellsPerCPU, totCellsPerCPU};
-    // int startingPosition[2] = {0, 0};
-    // MPI_Datatype type, subType;
-    // MPI_Type_create_subarray(2, globalMatrixDim, subMatrixDim, startingPosition, MPI_ORDER_C, MPI_INT, &type);
-    // MPI_Type_create_resized(type, 0, (totCellsPerCPU) * sizeof(int), &subType);
-    // MPI_Type_commit(&subType);
-
     MPI_Datatype subType = createMatrixDataType(lenSubMatrix);
 
     // counts relative to number of CPUs
@@ -354,64 +404,9 @@ void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, i
         return;
     }
 
-    // extract i coordinates, relative to cpuRank
-    int i_origin = cpuCoordinates[cpuRank].i_position * 2;
-
     receivedSubMatrix = allocateMatrix(lenSubMatrix, lenSubMatrix);
 
-    for (int k = 1; k <= iterations; k++)
-    {
-
-        // initialize the first column cpuCoordinates
-        if (cpuCoordinates[cpuRank].j_position == 0)
-        {
-
-            for (int i = 0; i < ROWS / lenCPUGrid; i++)
-            {
-                usleep(1000);
-                subMatrix[i][0] = subMatrix[i][0] + ((i_origin + i) * k);
-            }
-
-            for (int j = 1; j < ROWS / lenCPUGrid; j++)
-            {
-                for (int i = 0; i < ROWS / lenCPUGrid; i++)
-                {
-                    usleep(1000);
-                    subMatrix[i][j] = subMatrix[i][j] + subMatrix[i][j - 1] * k;
-                }
-            }
-
-            // Send the processed subMatrix to the next CPU
-            MPI_Send(&(subMatrix[0][0]), lenSubMatrix * lenSubMatrix, MPI_INT, cpuRank + 1, 0, MPI_COMM_WORLD);
-        }
-        else
-        {
-
-            // Receive a processed subMatrix from the previous CPU
-            MPI_Recv(&(receivedSubMatrix[0][0]), lenSubMatrix * lenSubMatrix, MPI_INT, cpuRank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-            for (int i = 0; i < ROWS / lenCPUGrid; i++)
-            {
-                usleep(1000);
-                subMatrix[i][0] = subMatrix[i][0] + (receivedSubMatrix[i][1] * k);
-            }
-
-            for (int j = 1; j < ROWS / lenCPUGrid; j++)
-            {
-                for (int i = 0; i < ROWS / lenCPUGrid; i++)
-                {
-                    usleep(1000);
-                    subMatrix[i][j] = subMatrix[i][j] + subMatrix[i][j - 1] * k;
-                }
-            }
-
-            // Send the processed subMatrix to the next CPU
-            if (cpuRank < instanceSize - 1)
-            {
-                MPI_Send(&(subMatrix[0][0]), lenSubMatrix * lenSubMatrix, MPI_INT, cpuRank + 1, 0, MPI_COMM_WORLD);
-            }
-        }
-    }
+    calculationSecond(iterations, cpuRank, lenCPUGrid, lenSubMatrix, instanceSize, subMatrix, receivedSubMatrix);
 
     // gathers all subMatrixes back to globalMatrix
     MPI_Gatherv(&(subMatrix[0][0]),
