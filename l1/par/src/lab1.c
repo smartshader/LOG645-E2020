@@ -131,7 +131,7 @@ MPI_Datatype createMatrixDataType(int lenSubMatrix)
 }
 
 // Calculating process for Problem 2 using MPI send/recv and Scatterv/Gatherv functions
-void calculationSecond(int iterations, int cpuRank, int lenCPUGrid, int lenSubMatrix, int instanceSize, int **subMatrix, int **receivedSubMatrix)
+void solveSecond(int iterations, int cpuRank, int lenCPUGrid, int lenSubMatrix, int instanceSize, int **subMatrix, int **receivedSubMatrix)
 {
 
     // extract i coordinates, relative to cpuRank
@@ -196,7 +196,7 @@ void calculationSecond(int iterations, int cpuRank, int lenCPUGrid, int lenSubMa
 }
 
 // Calculating process for Problem 1 using MPI Scatterv/Gatherv functions
-void calculationFirst(int iterations, int cpuRank, int lenCPUGrid, int **subMatrix)
+void solveFirst(int iterations, int cpuRank, int lenCPUGrid, int **subMatrix)
 {
 
     // extract i,j of coordinates from 4x4 CPUGrid and scale to original 8x8 globalMatrix coordinates
@@ -239,14 +239,18 @@ void setupScatter(int lenCPUGrid, int *sendCounts, int *displacement)
     }
 }
 
-void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, int initialValue)
+int main(int argc, char *argv[])
 {
-    // get the number of processes in MPI world
-    int instanceSize;
-    MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
-    // get the current rank of process
-    int cpuRank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &cpuRank);
+
+    if (4 != argc)
+    {
+        return EXIT_FAILURE;
+    }
+
+    // arguments from commandline
+    int problemChoice = atoi(argv[1]);
+    int initialValue = atoi(argv[2]);
+    int iterations = atoi(argv[3]);
 
     // used to store start/end times
     struct timeval timestamp_s;
@@ -255,94 +259,6 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     // a globalMatrix is our original 8x8 2D matrix
     int **globalMatrix = NULL;
     // a subMatrix is a 2x2 matrix, derived from the globalMatrix
-    int **subMatrix = NULL;
-    // globalMatrixRefPtr is used to store a reference to globalMatrix to when using Scatterv/Gatherv
-    int *globalMatrixRefPtr = NULL;
-
-    int lenGlobalMatrix = ROWS;
-    int lenCPUGrid = LEN_PROCESSMATRIX;
-    int lenSubMatrix = lenGlobalMatrix / lenCPUGrid;
-
-    // counts relative to number of CPUs
-    int sendCounts[lenCPUGrid * lenCPUGrid];
-    // displacement between CPUs
-    int displacement[lenCPUGrid * lenCPUGrid];
-
-    // Allocate and initialize globalMatrix when process is 0
-    if (cpuRank == MASTER_CPU)
-    {
-        gettimeofday(&timestamp_s, NULL);
-        globalMatrix = allocateMatrix(ROWS, COLS);
-        initializeMatrix(ROWS, COLS, initialValue, globalMatrix);
-
-        globalMatrixRefPtr = &(globalMatrix[0][0]);
-        setupScatter(lenCPUGrid, sendCounts, displacement);
-    }
-
-    // create a subType for MPI_Scatterv
-    MPI_Datatype subType = createMatrixDataType(lenSubMatrix);
-
-    // allocate a subMatrix for each process
-    subMatrix = allocateMatrix(lenSubMatrix, lenSubMatrix);
-
-    int scatterStatus = MPI_Scatterv(globalMatrixRefPtr,
-                                     sendCounts,
-                                     displacement,
-                                     subType,
-                                     &(subMatrix[0][0]),
-                                     ROWS * COLS / (lenCPUGrid * lenCPUGrid),
-                                     MPI_INT,
-                                     0,
-                                     MPI_COMM_WORLD);
-
-    if (scatterStatus != MPI_SUCCESS)
-    {
-        printf("[Error] MPI_Scatter\n");
-        return;
-    }
-
-    calculationFirst(iterations, cpuRank, lenCPUGrid, subMatrix);
-
-    // gathers all subMatrixes back to globalMatrix
-    MPI_Gatherv(&(subMatrix[0][0]),
-                ROWS * COLS / (lenCPUGrid * lenCPUGrid),
-                MPI_INT,
-                globalMatrixRefPtr,
-                sendCounts,
-                displacement,
-                subType,
-                0,
-                MPI_COMM_WORLD);
-
-    // release the subType as we no longer need it
-    MPI_Type_free(&subType);
-
-    // Display results in final thread
-    if (cpuRank == MASTER_CPU)
-    {
-        gettimeofday(&timestamp_e, NULL);
-        printMatrix(ROWS, COLS, globalMatrix);
-        printRuntime(timestamp_s, timestamp_e);
-        deallocateMatrix(ROWS, globalMatrix);
-        deallocateMatrix(lenSubMatrix, subMatrix);
-    }
-}
-
-void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, int initialValue)
-{
-    // get the number of processes in MPI world
-    int instanceSize;
-    MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
-    // get the current rank of process
-    int cpuRank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &cpuRank);
-
-    struct timeval timestamp_s;
-    struct timeval timestamp_e;
-
-    // globalMatrix is our main 8x8 matrix
-    int **globalMatrix = NULL;
-    // subMatrix is our 2x2 matrix that derives from globalMatrix
     int **subMatrix = NULL;
     // globalMatrixRefPtr is used to store a reference to globalMatrix to when using Scatterv/Gatherv
     int *globalMatrixRefPtr = NULL;
@@ -359,6 +275,19 @@ void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, i
     // displacement between CPUs
     int displacement[lenCPUGrid * lenCPUGrid];
 
+    // initializes a 4x4 CPU grid with identifying coordinates
+    initializeCPUGrid();
+
+    // initializes MPI space
+    MPI_Init(&argc, &argv);
+
+    // get the number of processes in MPI world
+    int instanceSize;
+    MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
+    // get the current rank of process
+    int cpuRank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &cpuRank);
+
     // Allocate and initialize globalMatrix when process is 0
     if (cpuRank == MASTER_CPU)
     {
@@ -389,15 +318,27 @@ void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, i
     if (scatterStatus != MPI_SUCCESS)
     {
         printf("[Error] MPI_Scatter\n");
-        return;
+        return EXIT_FAILURE;
     }
 
-    // allocate a receivedSubMatrix to utilize send/recv functions
-    receivedSubMatrix = allocateMatrix(lenSubMatrix, lenSubMatrix);
+    if (problemChoice == 1)
+    {
+        solveFirst(iterations, cpuRank, lenCPUGrid, subMatrix);
+    }
+    else if (problemChoice == 2)
+    {
+        // allocate a receivedSubMatrix to utilize send/recv functions
+        receivedSubMatrix = allocateMatrix(lenSubMatrix, lenSubMatrix);
 
-    calculationSecond(iterations, cpuRank, lenCPUGrid, lenSubMatrix, instanceSize, subMatrix, receivedSubMatrix);
+        solveSecond(iterations, cpuRank, lenCPUGrid, lenSubMatrix, instanceSize, subMatrix, receivedSubMatrix);
+    }
+    else
+    {
+        printf("[Error] Select valid problem choice\n");
+        return EXIT_FAILURE;
+    }
 
-    // gathers all subMatrixes back to globalMatrix
+    // Gather all subMatrixes back to globalMatrix
     MPI_Gatherv(&(subMatrix[0][0]),
                 ROWS * COLS / (lenCPUGrid * lenCPUGrid),
                 MPI_INT,
@@ -419,44 +360,11 @@ void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, i
         printRuntime(timestamp_s, timestamp_e);
         deallocateMatrix(ROWS, globalMatrix);
         deallocateMatrix(lenSubMatrix, subMatrix);
-        deallocateMatrix(lenSubMatrix, receivedSubMatrix);
-    }
-}
 
-int main(int argc, char *argv[])
-{
-
-    if (4 != argc)
-    {
-        return EXIT_FAILURE;
-    }
-
-    int problemChoice = atoi(argv[1]);
-    int initialValue = atoi(argv[2]);
-    int iterations = atoi(argv[3]);
-
-    struct timespec ts_sleep;
-    ts_sleep.tv_sec = 0;
-    ts_sleep.tv_nsec = 1000000L;
-
-    // initializes a 4x4 CPU grid with identifying coordinates
-    initializeCPUGrid();
-
-    // initializes MPI space
-    MPI_Init(&argc, &argv);
-
-    if (problemChoice == 1)
-    {
-        solveFirst(ROWS, COLS, iterations, ts_sleep, initialValue);
-    }
-    else if (problemChoice == 2)
-    {
-        solveSecond(ROWS, COLS, iterations, ts_sleep, initialValue);
-    }
-    else
-    {
-        printf("[Error] Select valid problem choice\n");
-        return EXIT_FAILURE;
+        if (problemChoice == 2)
+        {
+            deallocateMatrix(lenSubMatrix, receivedSubMatrix);
+        }
     }
 
     // terminates MPI execution environment
