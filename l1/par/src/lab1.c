@@ -263,27 +263,26 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     int lenCPUGrid = LEN_PROCESSMATRIX;
     int lenSubMatrix = lenGlobalMatrix / lenCPUGrid;
 
+    // counts relative to number of CPUs
+    int sendCounts[lenCPUGrid * lenCPUGrid];
+    // displacement between CPUs
+    int displacement[lenCPUGrid * lenCPUGrid];
+
     // Allocate and initialize globalMatrix when process is 0
     if (cpuRank == MASTER_CPU)
     {
         gettimeofday(&timestamp_s, NULL);
         globalMatrix = allocateMatrix(ROWS, COLS);
         initializeMatrix(ROWS, COLS, initialValue, globalMatrix);
-    }
 
-    MPI_Datatype subType = createMatrixDataType(lenSubMatrix);
-
-    // counts relative to number of CPUs
-    int sendCounts[lenCPUGrid * lenCPUGrid];
-    // displacement between CPUs
-    int displacement[lenCPUGrid * lenCPUGrid];
-
-    if (cpuRank == MASTER_CPU)
-    {
         globalMatrixRefPtr = &(globalMatrix[0][0]);
         setupScatter(lenCPUGrid, sendCounts, displacement);
     }
 
+    // create a subType for MPI_Scatterv
+    MPI_Datatype subType = createMatrixDataType(lenSubMatrix);
+
+    // allocate a subMatrix for each process
     subMatrix = allocateMatrix(lenSubMatrix, lenSubMatrix);
 
     int scatterStatus = MPI_Scatterv(globalMatrixRefPtr,
@@ -355,27 +354,26 @@ void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, i
     int lenCPUGrid = LEN_PROCESSMATRIX;
     int lenSubMatrix = lenGlobalMatrix / lenCPUGrid;
 
+    // counts relative to number of CPUs
+    int sendCounts[lenCPUGrid * lenCPUGrid];
+    // displacement between CPUs
+    int displacement[lenCPUGrid * lenCPUGrid];
+
     // Allocate and initialize globalMatrix when process is 0
     if (cpuRank == MASTER_CPU)
     {
         gettimeofday(&timestamp_s, NULL);
         globalMatrix = allocateMatrix(ROWS, COLS);
         initializeMatrix(ROWS, COLS, initialValue, globalMatrix);
-    }
 
-    MPI_Datatype subType = createMatrixDataType(lenSubMatrix);
-
-    // counts relative to number of CPUs
-    int sendCounts[lenCPUGrid * lenCPUGrid];
-    // displacement between CPUs
-    int displacement[lenCPUGrid * lenCPUGrid];
-
-    if (cpuRank == MASTER_CPU)
-    {
         globalMatrixRefPtr = &(globalMatrix[0][0]);
         setupScatter(lenCPUGrid, sendCounts, displacement);
     }
 
+    // create a subType for MPI_Scatterv
+    MPI_Datatype subType = createMatrixDataType(lenSubMatrix);
+
+    // allocate a subMatrix for each process
     subMatrix = allocateMatrix(lenSubMatrix, lenSubMatrix);
 
     int scatterStatus = MPI_Scatterv(globalMatrixRefPtr,
@@ -394,6 +392,7 @@ void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, i
         return;
     }
 
+    // allocate a receivedSubMatrix to utilize send/recv functions
     receivedSubMatrix = allocateMatrix(lenSubMatrix, lenSubMatrix);
 
     calculationSecond(iterations, cpuRank, lenCPUGrid, lenSubMatrix, instanceSize, subMatrix, receivedSubMatrix);
