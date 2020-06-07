@@ -63,7 +63,7 @@ void printRuntime(struct timeval tvs, struct timeval tve)
     printf("Runtime: %.6f seconds\n", delta / 1000000.0);
 }
 
-void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, int **matrix)
+void solveFirst(int rows, int cols, int iterations, int **matrix)
 {
     for (int k = 1; k <= iterations; k++)
     {
@@ -78,7 +78,7 @@ void solveFirst(int rows, int cols, int iterations, struct timespec ts_sleep, in
     }
 }
 
-void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, int **matrix)
+void solveSecond(int rows, int cols, int iterations, int **matrix)
 {
     for (int k = 1; k <= iterations; k++)
     {
@@ -99,7 +99,7 @@ void solveSecond(int rows, int cols, int iterations, struct timespec ts_sleep, i
     }
 }
 
-void (*solve)(int rows, int cols, int iterations, struct timespec ts_sleep, int **matrix) = solveFirst;
+void (*solve)(int rows, int cols, int iterations, int **matrix) = solveFirst;
 
 int main(int argc, char *argv[])
 {
@@ -110,10 +110,6 @@ int main(int argc, char *argv[])
 
     struct timeval timestamp_s;
     struct timeval timestamp_e;
-
-    struct timespec ts_sleep;
-    ts_sleep.tv_sec = 0;
-    ts_sleep.tv_nsec = 1000000L;
 
     int problem = atoi(argv[1]);
     int initialValue = atoi(argv[2]);
@@ -130,7 +126,7 @@ int main(int argc, char *argv[])
     initializeMatrix(ROWS, COLS, initialValue, matrix);
 
     gettimeofday(&timestamp_s, NULL);
-    solve(ROWS, COLS, iterations, ts_sleep, matrix);
+    solve(ROWS, COLS, iterations, matrix);
     gettimeofday(&timestamp_e, NULL);
 
     printMatrix(ROWS, COLS, matrix);
