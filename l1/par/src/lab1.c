@@ -79,6 +79,7 @@ void printRuntime(struct timeval tvs, struct timeval tve)
     long end = tve.tv_sec * 1000000 + tve.tv_usec;
     long delta = end - start;
     printf("Runtime: %.6f seconds\n", delta / 1000000.0);
+    //printf(" %.6f\n", delta / 1000000.0);
 }
 
 // Prints a 2x2 subMatrix for debugging purposes
