@@ -13,5 +13,6 @@
         "ostream": "c",
         "streambuf": "c",
         "functional": "c"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
 }
