@@ -70,11 +70,39 @@ int max(int a, int b);
 int min(int a, int b);
 
 void solveFirst(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int ** matrix) {
-
+	#pragma omp parallel for
+    for (int k = 1; k <= iterations; k++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            for (int i = 0; i < rows; i++)
+            {
+                usleep(1000);
+                matrix[i][j] = matrix[i][j] + i + j;
+            }
+        }
+    }	
 }
 
 void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int ** matrix) {
-
+	#pragma omp parallel for
+    for (int k = 1; k <= iterations; k++)
+	{
+		for (int i = 0; i < rows; i++)
+		{
+			for (int j = cols - 1; j >= 0; j--)
+			{
+				if (j == cols - 1)
+				{
+					matrix[i][j] = matrix[i][j] + i;
+				}
+				else
+				{
+					matrix[i][j] = matrix[i][j] + matrix[i][j+1];
+				}
+			}
+		}
+	}
 }
 
 int max(int a, int b) {
