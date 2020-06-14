@@ -4,7 +4,6 @@
 #include <sys/time.h>
 #include <time.h>
 #include <string.h>
-
 #include <omp.h>
 
 #define ROWS 12
@@ -40,7 +39,6 @@ void fillMatrix(int rows, int cols, int initialValue, int ** matrix) {
     }
 }
 
-
 void printMatrix(int rows, int cols, int ** matrix) {
     for(int i = 0; i < rows; i++) {
         for(int j = 0; j < cols; j++) {
@@ -74,58 +72,24 @@ void printStatistics(int nbThreads, struct timeval tvs_seq, struct timeval tve_s
 int max(int a, int b);
 int min(int a, int b);
 
-void solveFirst(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int ** matrix) {
+void solveFirst(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int **matrix)
+{
 
-    #pragma omp parallel \
+#pragma omp parallel \
     shared(matrix)
     {
-        #pragma omp for collapse(2)
-        // #pragma omp for schedule(static)
-        // sol 3, where collapse can be 2/3
-        // @ COLLAPSE 2 : 17 accel
-        // @ COLLAPSE 3 : 27 accel
-        
+#pragma omp for collapse(2)
         for (int i = 0; i < rows; i++)
         {
             for (int j = 0; j < cols; j++)
             {
-                // // sol 1
-                // tempTotal = 0;
-
-                // for (int k = 1; k <= iterations; k++)
-                // {
-                //     // // sol 3
-                //     // usleep(1000);
-                //     // matrix[i][j] += i + j;
-                //     // sol 1
-                //     tempTotal += i + j;
-                // }
-
-                // // // sol 1 - this is faster than sol 2
-                // // set collapse to 2
-                // // 4.77 accel
-                // usleep(1000);
-                // #pragma omp atomic
-                // matrix[i][j] +=tempTotal;
-
-                // // sol 2 - it sucks
-                // #pragma omp critical
-                // {
-                //     usleep(1000);
-                //     matrix[i][j] +=tempTotal;
-                //     tempTotal = 0;
-                // }
-
-                // sol 4 - single line, 2 loop
-                // accel at 42
                 usleep(TIMEWAITMICRO);
                 // nanosleep(&ts_sleep, NULL);
                 matrix[i][j] += i * iterations + j * iterations;
             }
         }
-    } // all threads join Master
+    }
 }
-
 
 void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int ** matrix) {
 	#pragma omp parallel
@@ -164,6 +128,7 @@ int min(int a, int b) {
 void (* solve)(int rows, int cols, int iterations, struct timespec ts_sleep, int ** matrix) = solveFirst;
 
 int main(int argc, char* argv[]) {
+
     if(5 != argc) {
         return EXIT_FAILURE;
     }
