@@ -46,10 +46,28 @@ _____ GENERAL RULES
 
 ____ COLLAPSE 
 - https://stackoverflow.com/questions/15160570/openmp-with-collapse-for-nested-for-loops-performs-worse-when-without
+- can be used when we have perfectly nested loops
 
 _____ ENCAPSULATE USING #pragma omp parallel
 - http://ppc.cs.aalto.fi/ch3/for/
 
 _____ PRIVATE/SHARED
 - http://jakascorner.com/blog/2016/06/omp-data-sharing-attributes.html
+- https://www3.nd.edu/~zxu2/acms60212-40212-S12/Lec-11-01.pdf (slides with point form)
 - if int is declared outside of #pragma omp parallel without specification, it is shared by default when parallelized. If internally declared, it is private.
+–private (variable list)•Specifies variables local to each thread
+–firstprivate(variable list)•Similar to the private•Private variables are initialized to variable value before the parallel directive
+–shared (variable list)•Specifies variables that are shared among all the threads
+–default (data scoping specifier)•Default data scoping specifiermay be shared or none
+
+_____ SCHEDULING
+: http://ppc.cs.aalto.fi/ch3/schedule/
+
+
+_____ OBSERVATIONS
+- on a 2x for perfect loops, collapse(2) is faster than schedule(static) because both loops are parallelized
+
+_____ other good slides
+- https://people.math.umass.edu/~johnston/PHI_WG_2014/OpenMPSlides_tamu_sc.pdf (good for dummies and definitions). AMDAHLS LAW
+-https://www3.nd.edu/~zxu2/acms60212-40212-S12/Lec-11-01.pdf lots of examples and explanations
+- quebec reference?? https://wiki.calculquebec.ca/w/Parall%C3%A9lisation?setlang=en
