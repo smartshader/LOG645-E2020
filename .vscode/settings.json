@@ -12,7 +12,8 @@
         "istream": "c",
         "ostream": "c",
         "streambuf": "c",
-        "functional": "c"
+        "functional": "c",
+        "atomic": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }
