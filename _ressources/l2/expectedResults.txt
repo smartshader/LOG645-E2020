@@ -1,0 +1,11 @@
+[Parallel Output Grid : Problem #1, 53 threads, initValue = 3, 600 iterations]
+Runtime sequential: 5.548941 seconds
+Runtime parallel: 0.801777 seconds
+Acceleration: 6.920803
+Efficiency: 0.130581
+
+[Parallel Output Grid : Problem #2, 23 threads, initValue = 7, 600 iterations]
+Runtime sequential: 5.215899 seconds
+Runtime parallel: 3.304571 seconds
+Acceleration: 1.578389
+Efficiency: 0.068626
