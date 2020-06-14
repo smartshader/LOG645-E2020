@@ -17,7 +17,7 @@ _____ CRITICAL vs ATOMIC
 - ATOMIC provides mutual exclusion but only to a specific memory location. It is generally faster than critical and applied to a single assignment that follows it
 
 _____ GENERAL RULES
-# DO NOT
+# DO NOT use omp for loops inside a FOR loop. Overheads have ^2 incurrance
 1) use omp for inside a another parallel for
         #pragma omp parallel for
         for (int i = 0; i < 3; ++i) {
@@ -43,3 +43,13 @@ _____ GENERAL RULES
         }
     
     sources : http://ppc.cs.aalto.fi/ch3/nested/
+
+____ COLLAPSE 
+- https://stackoverflow.com/questions/15160570/openmp-with-collapse-for-nested-for-loops-performs-worse-when-without
+
+_____ ENCAPSULATE USING #pragma omp parallel
+- http://ppc.cs.aalto.fi/ch3/for/
+
+_____ PRIVATE/SHARED
+- http://jakascorner.com/blog/2016/06/omp-data-sharing-attributes.html
+- if int is declared outside of #pragma omp parallel without specification, it is shared by default when parallelized. If internally declared, it is private.

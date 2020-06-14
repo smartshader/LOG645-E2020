@@ -21,25 +21,11 @@ int ** allocateMatrix(int rows, int cols) {
     return matrix;
 }
 
-int * allocateVecMatrix(int length) {
-    int * matrix = (int *) malloc(length * sizeof(int *));
-
-    for(int i = 0; i < length; i++) {
-        matrix[i] = malloc(sizeof(int));
-    }
-
-    return matrix;
-}
-
 void deallocateMatrix(int rows, int ** matrix) {
     for(int i = 0; i < rows; i++) {
         free(matrix[i]);
     }
 
-    free(matrix);
-}
-
-void deallocateVecMatrix(int * matrix) {
     free(matrix);
 }
 
@@ -51,29 +37,11 @@ void fillMatrix(int rows, int cols, int initialValue, int ** matrix) {
     }
 }
 
-void fillVecMatrix(int length, int initialValue, int *matrix){
-    for(int i = 0; i < length; i++){
-        matrix[i] = initialValue;
-    }
-}
-
 
 void printMatrix(int rows, int cols, int ** matrix) {
     for(int i = 0; i < rows; i++) {
         for(int j = 0; j < cols; j++) {
             printf("%6d ", matrix[i][j]);
-        }
-
-        printf("\n");
-    }
-
-    printf("\n");
-}
-
-void printLinMatrix(int rows, int cols, int * matrix) {
-    for(int i = 0; i < rows; i++) {
-        for(int j = 0; j < cols; j++) {
-            printf("%6d ", matrix[i * rows + j]);
         }
 
         printf("\n");
@@ -124,38 +92,54 @@ void solveFirst(const int rows, const int cols, const int iterations, const stru
 //     }
 
 // in prog
-    int tempTotal;
+int tempTotal;
 #pragma omp parallel \
-shared(matrix) \
-private(tempTotal)
+shared(matrix)
 {
     #pragma omp for collapse(2)
+    // sol 3, where collapse can be 2/3
+    // @ COLLAPSE 2 : 17 accel
+    // @ COLLAPSE 3 : 27 accel
     for (int i = 0; i < rows; i++)
     {
         for (int j = 0; j < cols; j++)
         {
-            for (int k = 1; k <= iterations; k++)
-            {
-                tempTotal += + i + j;
-            }
+            // // sol 1
+            // tempTotal = 0;
 
-            // sol 1 - this is faster than sol 2
-            usleep(1000);
-            #pragma omp atomic
-            matrix[i][j] +=tempTotal;
-            tempTotal = 0;
+            // for (int k = 1; k <= iterations; k++)
+            // {
+            //     // // sol 3
+            //     // usleep(1000);
+            //     // matrix[i][j] += i + j;
+            //     // sol 1
+            //     tempTotal += i + j;
+            // }
 
-            // // sol 2
+            // // // sol 1 - this is faster than sol 2
+            // // set collapse to 2
+            // // 4.77 accel
+            // usleep(1000);
+            // #pragma omp atomic
+            // matrix[i][j] +=tempTotal;
+
+            // // sol 2 - it sucks
             // #pragma omp critical
             // {
             //     usleep(1000);
             //     matrix[i][j] +=tempTotal;
             //     tempTotal = 0;
             // }
+
+            // sol 4 - single line, 2 loop
+            // accel at 42
+            usleep(50000);
+            #pragma omp atomic
+            matrix[i][j] += i*iterations + j*iterations;
             
         }
     }
-}
+} // all threads join Master
 
 
 
@@ -290,7 +274,7 @@ int main(int argc, char* argv[]) {
     printf("[Sequential : Prob = #%d, procs = %d, threads = 1, initValue = %d, iterations = %d ]\n", problem, omp_get_num_procs(), initialValue, iterations);
 
     gettimeofday(&timestamp_s_seq, NULL);
-    //solve(ROWS, COLS, iterations, ts_sleep, matrix);
+    solve(ROWS, COLS, iterations, ts_sleep, matrix);
     gettimeofday(&timestamp_e_seq, NULL);
     
     printMatrix(ROWS, COLS, matrix);
