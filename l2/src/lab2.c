@@ -39,7 +39,7 @@ void fillMatrix(int rows, int cols, int initialValue, int ** matrix) {
 void printMatrix(int rows, int cols, int ** matrix) {
     for(int i = 0; i < rows; i++) {
         for(int j = 0; j < cols; j++) {
-            printf("%12d ", matrix[i][j]);
+            printf("%6d ", matrix[i][j]);
         }
 
         printf("\n");
@@ -71,19 +71,67 @@ int min(int a, int b);
 
 void solveFirst(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int ** matrix) {
 
-	#pragma omp parallel
-	for (int k = 1; k <= iterations; k++)
+    int i, j, k;
+	#pragma omp parallel for collapse(3)\
+    shared(matrix) \
+    private(i, j, k)
+    // # pragma omp for
+    // #pragma omp for schedule(guided) nowait
+	for (k = 1; k <= iterations; k++)
 	{
-		#pragma omp for schedule(static) nowait
-		for (int j = 0; j < cols; j++)
+		// #pragma omp for schedule(static) nowait
+        //#pragma omp for reduction ( +:matrix)
+		for ( j = 0; j < cols; j++)
 		{
-			for (int i = 0; i < rows; i++)
+			for ( i = 0; i < rows; i++)
 			{
-				usleep(1000);
+                nanosleep(&ts_sleep, NULL);
+				// usleep(SECONDS);
 				matrix[i][j] = matrix[i][j] + i + j;
 			}
 		}
-	}	
+	}
+
+    // int i, j, k, tempTotal_i, tempTotal_j, tempTotal;
+    // #pragma omp parallel for collapse(3) \
+    // shared(matrix, i, j, tempTotal) \
+    // private(k)
+	// // #pragma omp parallel for nowait \
+    // // shared(matrix, i, j, tempTotal) \
+    // // private(k)
+    // // # pragma omp for
+    // // #pragma omp for schedule(guided) nowait
+    // // #pragma omp for schedule(static) nowait
+    // //#pragma omp for reduction ( +:matrix)
+    // for ( j = 0; j < cols; j++)
+    // {
+    //     // #pragma omp for nowait
+    //     for ( i = 0; i < rows; i++)
+    //     {
+    //         // #pragma omp for reduction ( +:tempTotal)
+    //         // #pragma omp for
+    //         // #pragma omp for
+    //         for (k = 1; k <= iterations; k++)
+    //         {
+    //             nanosleep(&ts_sleep, NULL);
+    //             //usleep(SECONDS);
+    //             // tempTotal += i + j;
+    //             matrix[i][j] = matrix[i][j] + i + j;
+                
+
+    //             // usleep(SECONDS);
+    //             // #pragma omp critical
+    //             // {
+    //             //     usleep(SECONDS);
+    //             //     matrix[i][j] += tempTotal;
+    //             //     tempTotal = 0;
+    //             // }
+                
+    //         }
+    //         // tempTotal = 0;
+            
+    //     }
+    // }
 }
 
 void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int ** matrix) {
@@ -97,12 +145,14 @@ void solveSecond(const int rows, const int cols, const int iterations, const str
 			{
 				if (j == cols - 1)
 				{
-					usleep(1000);
+                    nanosleep(&ts_sleep, NULL);
+					// usleep(MILLISECONDS);
 					matrix[i][j] = matrix[i][j] + i;
 				}
 				else
 				{
-					usleep(1000);
+                    nanosleep(&ts_sleep, NULL);
+					// usleep(MILLISECONDS);
 					matrix[i][j] = matrix[i][j] + matrix[i][j+1];
 				}
 			}
@@ -127,7 +177,8 @@ int main(int argc, char* argv[]) {
 
     struct timespec ts_sleep;
     ts_sleep.tv_sec = 0;
-    ts_sleep.tv_nsec = 1000L;
+    // ts_sleep.tv_nsec = 1000L;
+    ts_sleep.tv_nsec = 50000000L;
 
     int nbThreads = atoi(argv[1]);
     int problem = atoi(argv[2]);
@@ -142,12 +193,15 @@ int main(int argc, char* argv[]) {
 
     int ** matrix = allocateMatrix(ROWS, COLS);
 
-    // Sequential
+
+    // _______________________ Sequential
     struct timeval timestamp_s_seq;
     struct timeval timestamp_e_seq;
 
     omp_set_num_threads(1);
     fillMatrix(ROWS, COLS, initialValue, matrix);
+
+    printf("[Sequential : Prob = #%d, procs = %d, threads = 1, initValue = %d, iterations = %d ]\n", problem, omp_get_num_procs(), initialValue, iterations);
 
     gettimeofday(&timestamp_s_seq, NULL);
     solve(ROWS, COLS, iterations, ts_sleep, matrix);
@@ -155,12 +209,14 @@ int main(int argc, char* argv[]) {
     
     printMatrix(ROWS, COLS, matrix);
 
-    // Parallel
+    // _______________________ Parallel
     struct timeval timestamp_s_par;
     struct timeval timestamp_e_par;
 
     omp_set_num_threads(nbThreads);
     fillMatrix(ROWS, COLS, initialValue, matrix);
+
+    printf("[Parallel : Prob = #%d, procs = %d, threads = %d, initValue = %d, iterations = %d ]\n", problem, omp_get_num_procs(), nbThreads, initialValue, iterations);
 
     gettimeofday(&timestamp_s_par, NULL);
     solve(ROWS, COLS, iterations, ts_sleep, matrix);
@@ -168,7 +224,7 @@ int main(int argc, char* argv[]) {
     
     printMatrix(ROWS, COLS, matrix);
 
-    // Statistics
+    // _______________________Statistics
     printStatistics(nbThreads, timestamp_s_seq, timestamp_e_seq, timestamp_s_par, timestamp_e_par);
     deallocateMatrix(ROWS, matrix);
 
