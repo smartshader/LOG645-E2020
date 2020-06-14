@@ -9,7 +9,10 @@
 
 #define ROWS 12
 #define COLS 12
-#define TIMEWAIT 50000L
+// in nanoseconds, set for 50 milliseconds
+#define TIMEWAITNANO 50000000L
+// in microseconds, set for 50 milliseconds
+#define TIMEWAITMICRO 50000
 
 int ** allocateMatrix(int rows, int cols) {
     int ** matrix = (int **) malloc(rows * sizeof(int *));
@@ -73,133 +76,56 @@ int min(int a, int b);
 
 void solveFirst(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int ** matrix) {
 
-
-    // filipe's version
-// #pragma omp parallel
-//     for (int k = 1; k <= iterations; k++)
-//     {
-// #pragma omp for schedule(static) nowait
-//         for (int i = 0; i < rows; i++)
-//         {
-//             for (int j = 0; j < cols; j++)
-//             {
-
-//                 // usleep(1000);
-//                 nanosleep(&ts_sleep, NULL);
-//                 matrix[i][j] = matrix[i][j] + i + j;
-//             }
-//         }
-//     }
-
-// in prog
-int tempTotal;
-#pragma omp parallel \
-shared(matrix)
-{
-    #pragma omp for collapse(2)
-    // sol 3, where collapse can be 2/3
-    // @ COLLAPSE 2 : 17 accel
-    // @ COLLAPSE 3 : 27 accel
-    for (int i = 0; i < rows; i++)
+    #pragma omp parallel \
+    shared(matrix)
     {
-        for (int j = 0; j < cols; j++)
+        #pragma omp for collapse(2)
+        // #pragma omp for schedule(static)
+        // sol 3, where collapse can be 2/3
+        // @ COLLAPSE 2 : 17 accel
+        // @ COLLAPSE 3 : 27 accel
+        
+        for (int i = 0; i < rows; i++)
         {
-            // // sol 1
-            // tempTotal = 0;
+            for (int j = 0; j < cols; j++)
+            {
+                // // sol 1
+                // tempTotal = 0;
 
-            // for (int k = 1; k <= iterations; k++)
-            // {
-            //     // // sol 3
-            //     // usleep(1000);
-            //     // matrix[i][j] += i + j;
-            //     // sol 1
-            //     tempTotal += i + j;
-            // }
+                // for (int k = 1; k <= iterations; k++)
+                // {
+                //     // // sol 3
+                //     // usleep(1000);
+                //     // matrix[i][j] += i + j;
+                //     // sol 1
+                //     tempTotal += i + j;
+                // }
 
-            // // // sol 1 - this is faster than sol 2
-            // // set collapse to 2
-            // // 4.77 accel
-            // usleep(1000);
-            // #pragma omp atomic
-            // matrix[i][j] +=tempTotal;
+                // // // sol 1 - this is faster than sol 2
+                // // set collapse to 2
+                // // 4.77 accel
+                // usleep(1000);
+                // #pragma omp atomic
+                // matrix[i][j] +=tempTotal;
 
-            // // sol 2 - it sucks
-            // #pragma omp critical
-            // {
-            //     usleep(1000);
-            //     matrix[i][j] +=tempTotal;
-            //     tempTotal = 0;
-            // }
+                // // sol 2 - it sucks
+                // #pragma omp critical
+                // {
+                //     usleep(1000);
+                //     matrix[i][j] +=tempTotal;
+                //     tempTotal = 0;
+                // }
 
-            // sol 4 - single line, 2 loop
-            // accel at 42
-            usleep(50000);
-            matrix[i][j] += i*iterations + j*iterations;
-            
+                // sol 4 - single line, 2 loop
+                // accel at 42
+                usleep(TIMEWAITMICRO);
+                // nanosleep(&ts_sleep, NULL);
+                matrix[i][j] += i * iterations + j * iterations;
+            }
         }
-    }
-} // all threads join Master
-
-
-
-    // int i, j, k;
-	// #pragma omp parallel for collapse(3)\
-    // shared(matrix) \
-    // private(i, j, k)
-    // // # pragma omp for
-    // // #pragma omp for schedule(guided) nowait
-	// for (k = 1; k <= iterations; k++)
-	// {
-	// 	// #pragma omp for schedule(static) nowait
-    //     //#pragma omp for reduction ( +:matrix)
-	// 	for ( j = 0; j < cols; j++)
-	// 	{
-	// 		for ( i = 0; i < rows; i++)
-	// 		{
-    //             nanosleep(&ts_sleep, NULL);
-	// 			// usleep(SECONDS);
-	// 			matrix[i][j] = matrix[i][j] + i + j;
-	// 		}
-	// 	}
-	// }
-
-//     int i, j, k, tempTotal_i, tempTotal_j, tempTotal;
-// #pragma omp parallel for shared(matrix, i, j, tempTotal) private(k)
-//     // #pragma omp parallel for nowait \
-//     // shared(matrix, i, j, tempTotal) \
-//     // private(k)
-//     // # pragma omp for
-//     // #pragma omp for schedule(guided) nowait
-//     // #pragma omp for schedule(static) nowait
-//     //#pragma omp for reduction ( +:matrix)
-//     for (k = 1; k <= iterations; k++)
-//     {
-//         // #pragma omp for nowait
-//         for (i = 0; i < rows; i++)
-//         {
-//             for (j = 0; j < cols; j++)
-//             {
-//                 // #pragma omp for reduction ( +:tempTotal)
-//                 // #pragma omp for
-//                 // #pragma omp for
-
-//                 nanosleep(&ts_sleep, NULL);
-//                 //usleep(SECONDS);
-//                 // tempTotal += i + j;
-//                 matrix[i][j] = matrix[i][j] + i + j;
-
-//                 // usleep(SECONDS);
-//                 // #pragma omp critical
-//                 // {
-//                 //     usleep(SECONDS);
-//                 //     matrix[i][j] += tempTotal;
-//                 //     tempTotal = 0;
-//                 // }
-//             }
-//             // tempTotal = 0;
-//         }
-//     }
+    } // all threads join Master
 }
+
 
 void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int ** matrix) {
 	#pragma omp parallel
@@ -244,7 +170,7 @@ int main(int argc, char* argv[]) {
 
     struct timespec ts_sleep;
     ts_sleep.tv_sec = 0;
-    ts_sleep.tv_nsec = TIMEWAIT;
+    ts_sleep.tv_nsec = TIMEWAITNANO;
 
     int nbThreads = atoi(argv[1]);
     int problem = atoi(argv[2]);
@@ -258,10 +184,6 @@ int main(int argc, char* argv[]) {
     solve = solvers[problem - 1];
 
     int ** matrix = allocateMatrix(ROWS, COLS);
-    // int * linearMatrix = allocateVecMatrix(ROWS * COLS);
-    // fillVecMatrix(ROWS*COLS,initialValue, linearMatrix);
-    // printLinMatrix(ROWS,COLS,linearMatrix);
-
 
     // _______________________ Sequential
     struct timeval timestamp_s_seq;
