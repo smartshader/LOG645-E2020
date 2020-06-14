@@ -134,7 +134,6 @@ shared(matrix)
             // sol 4 - single line, 2 loop
             // accel at 42
             usleep(50000);
-            #pragma omp atomic
             matrix[i][j] += i*iterations + j*iterations;
             
         }
