@@ -71,3 +71,42 @@ _____ other good slides
 - https://people.math.umass.edu/~johnston/PHI_WG_2014/OpenMPSlides_tamu_sc.pdf (good for dummies and definitions). AMDAHLS LAW
 -https://www3.nd.edu/~zxu2/acms60212-40212-S12/Lec-11-01.pdf lots of examples and explanations
 - quebec reference?? https://wiki.calculquebec.ca/w/Parall%C3%A9lisation?setlang=en
+
+
+=========FINAL NOTES FOR PROB 1
+
+original code
+
+    for (int k = 1; k <= iterations; k++)
+        for (int j = 0; j < cols; j++)
+            for (int i = 0; i < rows; i++)
+                matrix[i][j] = matrix[i][j] + i + j;
+
+1) first, we swapped i and j loops so that j would be internal for better cache locality (this is called Exchange in our class notes)
+2) then, because k is a dependency on an external loop, we do another exchange to internalize it
+3) we see an opportunity to eliminate k loop and integrate it into a single line, reducing our problem to 2 loops for better parallization
+4) use collapse to paral the 2 for loops. each para instance only needs 1 instance of instruction. no race conditions.
+
+=========FINAL NOTES FOR PROB 2
+
+original code
+
+    for (int k = 1; k <= iterations; k++)
+	{
+		for (int i = 0; i < rows; i++)
+		{
+			for (int j = cols - 1; j >= 0; j--)
+			{
+				if (j == cols - 1)
+				{
+					matrix[i][j] = matrix[i][j] + i;
+				}
+				else
+				{
+					matrix[i][j] = matrix[i][j] + matrix[i][j+1];
+				}
+			}
+		}
+	}
+
+1) first, we inverted the flow of j from neg to pos as it is better for cache locality

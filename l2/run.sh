@@ -40,10 +40,10 @@ echo '<<<'
                 # 4550 3640 2860 2200 1650 1200 840 560 350 200 100 40
                 # 4641 3718 2926 2255 1695 1236 868 581 365 210 106 43
 
-# echo '>>> ________ [EVALUATION : Problem #2] ________'
-# echo ''
-# echo '>>> 23 2 7 600 (Acceleration doit etre plus que 15)'
-# ./lab2 23 2 7 600
-# echo '<<<'
+echo '>>> ________ [EVALUATION : Problem #2] ________'
+echo ''
+echo '>>> 23 2 7 600 (Acceleration doit etre plus que 15)'
+./lab2 23 2 7 600
+echo '<<<'
 
 make clean

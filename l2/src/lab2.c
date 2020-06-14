@@ -9,9 +9,36 @@
 #define ROWS 12
 #define COLS 12
 // in nanoseconds, set for 50 milliseconds
-#define TIMEWAITNANO 50000000L
+// #define TIMEWAITNANO 50000000L
+#define TIMEWAITNANO 1000L
 // in microseconds, set for 50 milliseconds
-#define TIMEWAITMICRO 50000
+// #define TIMEWAITMICRO 50000
+#define TIMEWAITMICRO 1000
+
+
+void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int ** matrix) {
+
+#pragma omp parallel
+    for (int k = 1; k <= iterations; k++)
+	{
+		#pragma omp for nowait
+		for (int i = 0; i < rows; i++)
+		{
+			for (int j = cols - 1; j >= 0; j--)
+			{
+				if (j == cols - 1)
+				{
+					matrix[i][j] = matrix[i][j] + i;
+				}
+				else
+				{
+					matrix[i][j] = matrix[i][j] + matrix[i][j+1];
+				}
+			}
+		}
+	}
+    
+}
 
 int ** allocateMatrix(int rows, int cols) {
     int ** matrix = (int **) malloc(rows * sizeof(int *));
@@ -74,7 +101,6 @@ int min(int a, int b);
 
 void solveFirst(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int **matrix)
 {
-
 #pragma omp parallel \
     shared(matrix)
     {
@@ -91,31 +117,6 @@ void solveFirst(const int rows, const int cols, const int iterations, const stru
     }
 }
 
-void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int ** matrix) {
-	#pragma omp parallel
-    for (int k = 1; k <= iterations; k++)
-	{
-		#pragma omp for nowait
-		for (int i = 0; i < rows; i++)
-		{
-			for (int j = cols - 1; j >= 0; j--)
-			{
-				if (j == cols - 1)
-				{
-                    nanosleep(&ts_sleep, NULL);
-					// usleep(MILLISECONDS);
-					matrix[i][j] = matrix[i][j] + i;
-				}
-				else
-				{
-                    nanosleep(&ts_sleep, NULL);
-					// usleep(MILLISECONDS);
-					matrix[i][j] = matrix[i][j] + matrix[i][j+1];
-				}
-			}
-		}
-	}
-}
 
 int max(int a, int b) {
     return a >= b ? a : b;
