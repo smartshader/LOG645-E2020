@@ -177,7 +177,6 @@ int main(int argc, char* argv[]) {
     gettimeofday(&timestamp_s_par, NULL);
     solve(ROWS, COLS, iterations, ts_sleep, matrix);
     gettimeofday(&timestamp_e_par, NULL);
-    
     printMatrix(ROWS, COLS, matrix);
 
     // _______________________Statistics
