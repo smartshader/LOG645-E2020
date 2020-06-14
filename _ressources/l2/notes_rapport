@@ -1,0 +1,45 @@
+# ____________________cache locality
+Ref: https://stackoverflow.com/questions/19328909/nested-loop-optimisation-in-c-and-openmp
+checking something like
+
+int a[10000][10000];
+for(int i = 0; i < 10000; i++){
+    for(int j = 0; j < 10000; j++){
+       a[i][j]++;               <-- good cache locality
+       a[j][i]++;               <-- bad cache locality
+    }
+}
+
+"In computer science, locality of reference, also known as the principle of locality,[1] is the tendency of a processor to access the same set of memory locations repetitively over a short period of time.[2] There are two basic types of reference locality – temporal and spatial locality. Temporal locality refers to the reuse of specific data, and/or resources, within a relatively small time duration. Spatial locality (also termed data locality[3]) refers to the use of data elements within relatively close storage locations. Sequential locality, a special case of spatial locality, occurs when data elements are arranged and accessed linearly, such as, traversing the elements in a one-dimensional array."
+
+_____ CRITICAL vs ATOMIC
+- CRITICAL can encapsulate a block where only one thread can enter at once, turning it into a sequential code inside a paralleized loop
+- ATOMIC provides mutual exclusion but only to a specific memory location. It is generally faster than critical and applied to a single assignment that follows it
+
+_____ GENERAL RULES
+# DO NOT
+1) use omp for inside a another parallel for
+        #pragma omp parallel for
+        for (int i = 0; i < 3; ++i) {
+            #pragma omp for
+            for (int j = 0; j < 6; ++j) {
+                c(i, j);
+            }
+        }
+2) parallel for twice outside and inside
+        #pragma omp parallel for
+        for (int i = 0; i < 3; ++i) {
+            #pragma omp parallel for
+            for (int j = 0; j < 6; ++j) {
+                c(i, j);
+            }
+        }
+3) use parallel for inside inner loop. REASON : In each iteration of outerloop, a parallel region is created causing overhead.
+        for (int i = 0; i < 3; ++i) {
+            #pragma omp parallel for
+            for (int j = 0; j < 6; ++j) {
+                c(i, j);
+            }
+        }
+    
+    sources : http://ppc.cs.aalto.fi/ch3/nested/
