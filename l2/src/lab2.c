@@ -24,6 +24,8 @@ int min(int a, int b) {
     return a <= b ? a : b;
 }
 
+// this current code has 2 for loops nested within another for loop.
+// issues - struggling to parallelize this.
 void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int **matrix)
 {
     int lastColumnJ = cols - 1;
