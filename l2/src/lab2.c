@@ -24,36 +24,46 @@ int min(int a, int b) {
     return a <= b ? a : b;
 }
 
-
 void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int **matrix)
 {
     int lastColumnJ = cols - 1;
 
+    // #pragma omp for ordered
     for (int k = 1; k <= iterations; k++)
     {
-        for (int i = 0; i < rows; i++)
+#pragma omp parallel \
+    shared(matrix)
         {
-            usleep(TIMEWAITMICRO);
-            matrix[i][lastColumnJ] += i;
-        }
-    
-        // no torsion applied
-        // for (int i = 0; i < rows; i++)
-        // {
-        //     for (int j = 1; j <= lastColumnJ; j++)
-        //     {
-        //         matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
-        //     }
-        // }
-
-        // TORSION, with if statement
-        for (int j = 1; j < cols + rows - 1; j++)
-        {
-            for (int i = max(0, j - cols + 1); i <= min(j, rows - 1); i++)
+            // #pragma omp critical
+            // #pragma omp for
+            // #pragma omp single
+            for (int i = 0; i < rows; i++)
             {
-                if ((j - i) != 0){
-                    usleep(TIMEWAITMICRO);
-                    matrix[i][lastColumnJ - (j-i)] += matrix[i][(lastColumnJ - (j-i)) +1];
+                usleep(TIMEWAITMICRO);
+                matrix[i][lastColumnJ] += i;
+            }
+
+            // no torsion applied
+            // for (int i = 0; i < rows; i++)
+            // {
+            //     for (int j = 1; j <= lastColumnJ; j++)
+            //     {
+            //         matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
+            //     }
+            // }
+            // TORSION, with if statement
+// #pragma omp for collapse(2) -- doesn;'t wrk'
+#pragma omp for
+            for (int j = 1; j < cols + rows - 1; j++)
+            {
+                for (int i = max(0, j - cols + 1); i <= min(j, rows - 1); i++)
+                {
+                    if ((j - i) != 0)
+                    {
+                        usleep(TIMEWAITMICRO);
+                        // #pragma omp critical
+                        matrix[i][lastColumnJ - (j - i)] += matrix[i][(lastColumnJ - (j - i)) + 1];
+                    }
                 }
             }
         }
