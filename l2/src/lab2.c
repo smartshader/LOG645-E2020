@@ -74,13 +74,16 @@ void solveSecond(const int rows, const int cols, const int iterations, const str
     //     }
     
     // }
+  
+        
+
     for (int k = 1; k <= iterations; k++)
     {
         for (int i = 0; i < rows; i++)
         {
             matrix[i][lastColumnJ] += i;
         }
-        
+    
         for (int i = 0; i < rows; i++)
         {
             for (int j = 1; j <= lastColumnJ; j++)
