@@ -29,64 +29,83 @@ void solveSecond(const int rows, const int cols, const int iterations, const str
 {
 
     // int lastColumnJ = cols - 1;
-
     // for (int i = 0; i < rows; i++)
     // {
-    //     for (int k = 1; k <= iterations; k++)
+    //     // for (int k = 1; k <= iterations; k++)
+    //     // for (int k = max(0, j - lastColumnJ +1); k <= min(j, iterations - 1); k++)
+    //     for (int j = 0; j < lastColumnJ + iterations - 1; j++)
     //     {
-    //         for (int j = lastColumnJ - 1; j >= 0; j--)
+    //         // usleep(TIMEWAITMICRO);
+    //         matrix[i][lastColumnJ] += i;
+    //         // for (int j = lastColumnJ - 1; j >= 0; j--)
+    //         // move forward J loops
+    //         // for (int j = 0; j <= lastColumnJ; j++)
+    //         for (int k = max(0, j - lastColumnJ + 1); k <= min(j, iterations - 1); k++)
     //         {
-    //             if (j == lastColumnJ){
-    //                 usleep(TIMEWAITMICRO);
-    //                 matrix[i][lastColumnJ] += i;
-    //             }
-    //             else{
-    //                 usleep(TIMEWAITMICRO);
-    //                 matrix[i][j] += matrix[i][j + 1];
-    //             }
-                
+    //             //usleep(TIMEWAITMICRO);
+    //             matrix[i][lastColumnJ - (j - k)] += matrix[i][lastColumnJ - (j - k) + 1];
     //         }
     //     }
     // }
 
     int lastColumnJ = cols - 1;
-#pragma omp parallel
-    // shared(matrix)
+    for (int i = 0; i < rows; i++)
     {
-        // #pragma omp for collapse(3)
-
-#pragma omp for schedule(dynamic) ordered
         for (int k = 1; k <= iterations; k++)
+        // for (int k = max(0, j - lastColumnJ +1); k <= min(j, iterations - 1); k++)
+        // for (int j = 0; j < lastColumnJ + iterations - 1; j++)
         {
-            // for (int i = 0; i < rows; i++)
-            // #pragma omp for collapse(2)
-            #pragma omp critical
-            for (int j = 0; j < cols + rows - 1; j++)
+            // usleep(TIMEWAITMICRO);
+            matrix[i][lastColumnJ] += i;
+            // for (int j = lastColumnJ - 1; j >= 0; j--)
+            // move forward J loops
+            for (int j = 1; j <= lastColumnJ; j++)
+            // for (int k = max(0, j - lastColumnJ + 1); k <= min(j, iterations - 1); k++)
             {
-
-                // for (int j = 0; j <= lastColumnJ; j++)
-                // #pragma omp critical
-                for (int i = max(0, j - cols + 1); i <= min(j, rows - 1); i++)
-                {
-                    if ((j - i) == 0)
-                    {
-                        usleep(TIMEWAITMICRO);
-                        // #pragma omp atomic
-                        // #pragma omp critical
-                        matrix[i][lastColumnJ] += i;
-                    }
-                    else
-                    {
-                        usleep(TIMEWAITMICRO);
-                        // #pragma omp critical
-                        // #pragma omp single
-                        matrix[i][lastColumnJ - (j - i)] += matrix[i][(lastColumnJ - (j - i)) + 1];
-                        // #pragma omp barrier
-                    }
-                }
+                //usleep(TIMEWAITMICRO);
+                matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
             }
         }
     }
+
+//     int lastColumnJ = cols - 1;
+// #pragma omp parallel
+//     // shared(matrix)
+//     {
+//         // #pragma omp for collapse(3)
+
+// #pragma omp for schedule(dynamic) ordered
+//         for (int k = 1; k <= iterations; k++)
+//         {
+//             // for (int i = 0; i < rows; i++)
+//             // #pragma omp for collapse(2)
+//             #pragma omp critical
+//             for (int j = 0; j < cols + rows - 1; j++)
+//             {
+
+//                 // for (int j = 0; j <= lastColumnJ; j++)
+//                 // #pragma omp critical
+//                 for (int i = max(0, j - cols + 1); i <= min(j, rows - 1); i++)
+//                 {
+//                     if ((j - i) == 0)
+//                     {
+//                         usleep(TIMEWAITMICRO);
+//                         // #pragma omp atomic
+//                         // #pragma omp critical
+//                         matrix[i][lastColumnJ] += i;
+//                     }
+//                     else
+//                     {
+//                         usleep(TIMEWAITMICRO);
+//                         // #pragma omp critical
+//                         // #pragma omp single
+//                         matrix[i][lastColumnJ - (j - i)] += matrix[i][(lastColumnJ - (j - i)) + 1];
+//                         // #pragma omp barrier
+//                     }
+//                 }
+//             }
+//         }
+//     }
 
     // // the last column of the matrix
     // int last_col = cols-1;
