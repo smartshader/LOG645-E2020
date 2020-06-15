@@ -109,4 +109,12 @@ original code
 		}
 	}
 
-1) first, we inverted the flow of j from neg to pos as it is better for cache locality
+FLOW
+- inc i
+    - inc k
+        - inc lastColumnJ, dependent on i, k
+
+1) Since the last column of J is only initialized through i iterations, even though it doesn't need to be in the J loop, we should try to keep our perfect loop structure.
+2) Invert J loop direction to positive
+3) apply loop skew (torsion) between i and j
+2) matrix[i][lastColumnJ] += i; DF matrix[i][j] += matrix[i][j + 1];

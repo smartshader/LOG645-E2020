@@ -16,28 +16,78 @@
 #define TIMEWAITMICRO 1000
 
 
-void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int ** matrix) {
+int max(int a, int b) {
+    return a >= b ? a : b;
+}
 
+int min(int a, int b) {
+    return a <= b ? a : b;
+}
+
+
+void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int **matrix)
+{
+
+    // int lastColumnJ = cols - 1;
+
+    // for (int i = 0; i < rows; i++)
+    // {
+    //     for (int k = 1; k <= iterations; k++)
+    //     {
+    //         for (int j = lastColumnJ - 1; j >= 0; j--)
+    //         {
+    //             if (j == lastColumnJ){
+    //                 usleep(TIMEWAITMICRO);
+    //                 matrix[i][lastColumnJ] += i;
+    //             }
+    //             else{
+    //                 usleep(TIMEWAITMICRO);
+    //                 matrix[i][j] += matrix[i][j + 1];
+    //             }
+                
+    //         }
+    //     }
+    // }
+
+    int lastColumnJ = cols - 1;
 #pragma omp parallel
-    for (int k = 1; k <= iterations; k++)
-	{
-		#pragma omp for nowait
-		for (int i = 0; i < rows; i++)
-		{
-			for (int j = cols - 1; j >= 0; j--)
-			{
-				if (j == cols - 1)
-				{
-					matrix[i][j] = matrix[i][j] + i;
-				}
-				else
-				{
-					matrix[i][j] = matrix[i][j] + matrix[i][j+1];
-				}
-			}
-		}
-	}
-    
+    // shared(matrix)
+    {
+        // #pragma omp for collapse(3)
+
+#pragma omp for schedule(dynamic) ordered
+        for (int k = 1; k <= iterations; k++)
+        {
+
+            // for (int i = 0; i < rows; i++)
+            // #pragma omp for collapse(2)
+            // #pragma omp critical
+            for (int j = 0; j < cols + rows - 1; j++)
+            {
+
+                // for (int j = 0; j <= lastColumnJ; j++)
+                // #pragma omp critical
+                for (int i = max(0, j - cols + 1); i <= min(j, rows - 1); i++)
+                {
+                    if ((j - i) == 0)
+                    {
+                        usleep(TIMEWAITMICRO);
+                        // #pragma omp atomic
+                        // #pragma omp critical
+                        matrix[i][lastColumnJ] += i;
+                    }
+                    else
+                    {
+                        usleep(TIMEWAITMICRO);
+                        // #pragma omp critical
+                        // #pragma omp single
+                        matrix[i][lastColumnJ - (j - i)] += matrix[i][(lastColumnJ - (j - i)) + 1];
+                        // #pragma omp barrier
+                    }
+                }
+            }
+        }
+    }
 }
 
 int ** allocateMatrix(int rows, int cols) {
@@ -117,14 +167,6 @@ void solveFirst(const int rows, const int cols, const int iterations, const stru
     }
 }
 
-
-int max(int a, int b) {
-    return a >= b ? a : b;
-}
-
-int min(int a, int b) {
-    return a <= b ? a : b;
-}
 
 void (* solve)(int rows, int cols, int iterations, struct timespec ts_sleep, int ** matrix) = solveFirst;
 
