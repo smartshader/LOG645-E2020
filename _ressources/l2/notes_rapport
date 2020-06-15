@@ -118,3 +118,11 @@ FLOW
 2) Invert J loop direction to positive
 3) apply loop skew (torsion) between i and j
 2) matrix[i][lastColumnJ] += i; DF matrix[i][j] += matrix[i][j + 1];
+
+
+second design
+
+1) start with k,i,j
+2) exchange i, j
+3) externalize lastColumnJ instance code
+4) swap i, k
