@@ -49,22 +49,39 @@ void solveSecond(const int rows, const int cols, const int iterations, const str
     // }
 
     int lastColumnJ = cols - 1;
-    for (int i = 0; i < rows; i++)
+    // for (int i = 0; i < rows; i++)
+    // {
+    //     for (int k = 0; k < iterations; k++)
+    //     {
+    //         matrix[i][lastColumnJ] += i;
+    //     }
+
+    //     for (int k = 0; k < iterations; k++){
+
+    //     // for (int k = max(0, j - lastColumnJ +1); k <= min(j, iterations - 1); k++)
+    //     // for (int j = 0; j < cols + iterations - 1; j++)
+    //         // usleep(TIMEWAITMICRO);
+    //         // matrix[i][lastColumnJ] += i;
+    //         // for (int j = lastColumnJ - 1; j >= 0; j--)
+    //         // move forward J loops
+    //         for (int j = 1; j <= lastColumnJ; j++)
+    //         // for (int k = max(0, j - cols + 1); k <= min(j, iterations - 1); k++)
+    //         {
+    //             //usleep(TIMEWAITMICRO);
+    //             matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
+    //             // matrix[i][lastColumnJ - (j - k)] += matrix[i][lastColumnJ - (j - k) + 1];
+    //         }
+    //     }
+    
+    // }
+    for (int k = 1; k <= iterations; k++)
     {
-        for (int k = 1; k <= iterations; k++)
-        // for (int k = max(0, j - lastColumnJ +1); k <= min(j, iterations - 1); k++)
-        // for (int j = 0; j < cols + iterations - 1; j++)
+        for (int i = 0; i < rows; i++)
         {
-            // usleep(TIMEWAITMICRO);
             matrix[i][lastColumnJ] += i;
-            // for (int j = lastColumnJ - 1; j >= 0; j--)
-            // move forward J loops
             for (int j = 1; j <= lastColumnJ; j++)
-            // for (int k = max(0, j - cols + 1); k <= min(j, iterations - 1); k++)
             {
-                //usleep(TIMEWAITMICRO);
                 matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
-                // matrix[i][lastColumnJ - (j - k)] += matrix[i][lastColumnJ - (j - k) + 1];
             }
         }
     }
