@@ -12,8 +12,8 @@
 // #define TIMEWAITNANO 50000000L
 #define TIMEWAITNANO 1000L
 // in microseconds, set for 50 milliseconds
-// #define TIMEWAITMICRO 50000
-#define TIMEWAITMICRO 1000
+#define TIMEWAITMICRO 50000
+// #define TIMEWAITMICRO 1000
 
 
 int max(int a, int b) {
@@ -58,10 +58,9 @@ void solveSecond(const int rows, const int cols, const int iterations, const str
 #pragma omp for schedule(dynamic) ordered
         for (int k = 1; k <= iterations; k++)
         {
-
             // for (int i = 0; i < rows; i++)
             // #pragma omp for collapse(2)
-            // #pragma omp critical
+            #pragma omp critical
             for (int j = 0; j < cols + rows - 1; j++)
             {
 
@@ -88,6 +87,25 @@ void solveSecond(const int rows, const int cols, const int iterations, const str
             }
         }
     }
+
+    // // the last column of the matrix
+    // int last_col = cols-1;
+    // // the starting point of j loop
+    // int j_start = last_col-1;
+    // int i,j,k;
+
+    // #pragma omp parallel for shared(matrix) private (j, k) schedule(dynamic) ordered
+    // for (i = 0; i < rows; i++){
+    //     for (k = 0; k < iterations; k++){
+    //         // Fix the last column values since it is loop independant
+    //         nanosleep(&ts_sleep, NULL);
+    //         matrix[i][last_col] += i;
+    //         for (j = j_start; j>=0; j--){
+    //             nanosleep(&ts_sleep, NULL);
+    //             matrix[i][j] += matrix[i][j+1];
+    //         }
+    //     }
+    // }
 }
 
 int ** allocateMatrix(int rows, int cols) {
