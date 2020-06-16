@@ -71,7 +71,10 @@ _____ other good slides
 - https://people.math.umass.edu/~johnston/PHI_WG_2014/OpenMPSlides_tamu_sc.pdf (good for dummies and definitions). AMDAHLS LAW
 -https://www3.nd.edu/~zxu2/acms60212-40212-S12/Lec-11-01.pdf lots of examples and explanations
 - quebec reference?? https://wiki.calculquebec.ca/w/Parall%C3%A9lisation?setlang=en
+- openmp loop optimizations : http://akira.ruc.dk/~keld/teaching/IPDC_f10/Slides/pdf4x/4_Performance.4x.pdf
 
+______ stackoverflow reference
+- parallelizing 4 loops : https://stackoverflow.com/questions/48037155/how-can-i-best-parallelise-a-set-of-four-nested-for-loops-in-a-brute-force-a
 
 =========FINAL NOTES FOR PROB 1
 
@@ -123,6 +126,24 @@ FLOW
 second design
 
 1) start with k,i,j
-2) exchange i, j
-3) externalize lastColumnJ instance code
-4) swap i, k
+2) apply torsion between i, j
+3) apply torsion between k, j
+
+it becomes
+
+        for (int j = 1; j < maxJ + iterations - 1; j++)
+        {
+            for (int k = max(0, j - maxJ + 1); k <= min(j, iterations - 1); k++)
+            {
+                for (int i = max(0, j - k - cols + 1); i <= min(j - k, rows - 1); i++)
+                {
+
+-- canonical loop restrictions makes it hard to apply torsion and openmp 
+https://www.openmp.org/spec-html/5.0/openmpsu40.html
+https://stackoverflow.com/questions/7901681/openmp-cant-parallelize-nested-for-loops
+-- different levels of parallelization
+https://stackoverflow.com/questions/53207497/how-to-parallelize-for-loop-inside-other-for-loop-with-openmp
+-- detecting nested parallisim!!
+https://stackoverflow.com/questions/31520326/openmp-check-if-nested-parallesim
+
+active-levels-var - the number of nested active parallel regions that enclose the current task such that all of the parallel regions are enclosed by the outermost initial task region on the current device. There is one copy of this ICV per data environment.

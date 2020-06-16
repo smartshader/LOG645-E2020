@@ -30,26 +30,37 @@ void solveSecond(const int rows, const int cols, const int iterations, const str
     int lastColumnJ = cols - 1;
     int maxJ = cols + rows - 1;
 
-    #pragma omp for ordered
-    for (int j = 1; j < maxJ + iterations - 1; j++)
-    {
-        for (int k = max(0, j - maxJ + 1); k <= min(j, iterations - 1); k++)
-        {
-            for (int i = max(0, j - k - cols + 1); i <= min(j - k, rows - 1); i++)
-            {
-                if ((j - k - i) != 0)
-                {
-                    // usleep(TIMEWAITMICRO);
-                    matrix[i][lastColumnJ - (j - k - i)] += matrix[i][(lastColumnJ - (j - k - i)) + 1];
-                }
-                else
-                {
-                    // usleep(TIMEWAITMICRO);
-                    matrix[i][lastColumnJ] += i;
-                }
-            }
-        }
-    }
+// #pragma omp parallel
+//     shared(matrix)
+
+        // for (int j = 1; j < maxJ + iterations - 1; j++)
+        // {
+        //     // #pragma omp parallel for shared (matrix) ordered
+        //     for (int k = max(0, j - maxJ + 1); k <= min(j, iterations - 1); k++)
+        //     {
+        //         #pragma omp parallel for
+        //         for (int i = max(0, j - k - cols + 1); i <= min(j - k, rows - 1); i++)
+        //         {
+        //             #pragma omp critical
+        //             {
+        //                 if ((j - k - i) != 0)
+        //                 {
+        //                     usleep(TIMEWAITMICRO);
+        //                     // #pragma omp critical
+        //                     // #pragma omp atomic
+        //                     matrix[i][lastColumnJ - (j - k - i)] += matrix[i][(lastColumnJ - (j - k - i)) + 1];
+        //                 }
+        //                 else
+        //                 {
+        //                     usleep(TIMEWAITMICRO);
+        //                     // #pragma omp critical
+        //                     // #pragma omp atomic
+        //                     matrix[i][lastColumnJ] += i;
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
     // // the original with 3 perfectly nested loops, 1 torsion, tested and functional
 
@@ -74,55 +85,78 @@ void solveSecond(const int rows, const int cols, const int iterations, const str
     //     }
     // }
 
+    // #pragma omp parallel for collapse (3) shared (matrix) schedule (dynamic) ordered
+        // for (int k = 1; k <= iterations; k++)
+        // {
+        //     for (int i = 0; i < rows; i++)
+        //     {
+        //         for (int j = cols - 1; j >= 0; j--)
+        //         {
+        //             if (j == cols - 1)
+        //             {
+        //                 matrix[i][j] = matrix[i][j] + i;
+        //             }
+        //             else
+        //             {
+        //                 matrix[i][j] = matrix[i][j] + matrix[i][j + 1];
+        //             }
+        //         }
+        //     }
+        // }
 
-}
-
-// this current code has 2 for loops nested within another for loop.
-// issues - struggling to parallelize this.
-void solveSecondA(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int **matrix)
-{
-    int lastColumnJ = cols - 1;
-
-    // #pragma omp for ordered
-    for (int k = 1; k <= iterations; k++)
-    {
-#pragma omp parallel \
-    shared(matrix)
+        // int lastColumnJ = cols - 1;
+        #pragma omp parallel for collapse(2)
+        for (int i = 0; i < rows; i++)
         {
-            // #pragma omp critical
-            // #pragma omp for
-            // #pragma omp single
-            for (int i = 0; i < rows; i++)
+            for (int k = 1; k <= iterations; k++)
             {
                 usleep(TIMEWAITMICRO);
                 matrix[i][lastColumnJ] += i;
-            }
-
-            // no torsion applied
-            // for (int i = 0; i < rows; i++)
-            // {
-            //     for (int j = 1; j <= lastColumnJ; j++)
-            //     {
-            //         matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
-            //     }
-            // }
-            // TORSION, with if statement
-// #pragma omp for collapse(2) -- doesn;'t wrk'
-#pragma omp for
-            for (int j = 1; j < cols + rows - 1; j++)
-            {
-                for (int i = max(0, j - cols + 1); i <= min(j, rows - 1); i++)
+                for (int j = 1; j <= lastColumnJ; j++)
                 {
-                    if ((j - i) != 0)
-                    {
-                        usleep(TIMEWAITMICRO);
-                        // #pragma omp critical
-                        matrix[i][lastColumnJ - (j - i)] += matrix[i][(lastColumnJ - (j - i)) + 1];
-                    }
+                    usleep(TIMEWAITMICRO);
+                    matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
                 }
             }
         }
-    }
+
+        // // int lastColumnJ = cols - 1;
+        // #pragma omp parallel for collapse(3) ordered
+        // for (int i = 0; i < rows; i++)
+        // {
+        //     for (int k = 1; k <= iterations; k++)
+        //     {
+        //         for (int j = 1; j <= lastColumnJ; j++)
+        //         {
+        //             if (j!= 0)
+        //             {
+        //                 matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
+        //             }
+        //             else
+        //             {
+        //                 matrix[i][lastColumnJ] += i;
+        //             }
+        //         }
+        //     }
+        // }
+
+        // for (int k = 1; k <= iterations; k++)
+        // {
+        //     for (int i = 0; i < rows; i++)
+        //     {
+        //         for (int j = cols - 1; j >= 0; j--)
+        //         {
+        //             if (j == cols - 1)
+        //             {
+        //                 matrix[i][j] = matrix[i][j] + i;
+        //             }
+        //             else
+        //             {
+        //                 matrix[i][j] = matrix[i][j] + matrix[i][j + 1];
+        //             }
+        //         }
+        //     }
+        // }
 }
 
 int ** allocateMatrix(int rows, int cols) {
