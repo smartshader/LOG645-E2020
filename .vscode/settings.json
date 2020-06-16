@@ -13,7 +13,10 @@
         "ostream": "c",
         "streambuf": "c",
         "functional": "c",
-        "atomic": "c"
+        "atomic": "c",
+        "chrono": "c",
+        "random": "c",
+        "limits": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }
