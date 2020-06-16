@@ -27,19 +27,36 @@ int min(int a, int b) {
 // rework but with 3 perfectly nested loops and torsion applied twice
 void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int **matrix)
 {
+    int lastColumnJ = cols - 1;
+    int maxJ = cols + rows - 1;
+
+    #pragma omp for ordered
+    for (int j = 1; j < maxJ + iterations - 1; j++)
+    {
+        for (int k = max(0, j - maxJ + 1); k <= min(j, iterations - 1); k++)
+        {
+            for (int i = max(0, j - k - cols + 1); i <= min(j - k, rows - 1); i++)
+            {
+                if ((j - k - i) != 0)
+                {
+                    // usleep(TIMEWAITMICRO);
+                    matrix[i][lastColumnJ - (j - k - i)] += matrix[i][(lastColumnJ - (j - k - i)) + 1];
+                }
+                else
+                {
+                    // usleep(TIMEWAITMICRO);
+                    matrix[i][lastColumnJ] += i;
+                }
+            }
+        }
+    }
+
+    // // the original with 3 perfectly nested loops, 1 torsion, tested and functional
+
     // int lastColumnJ = cols - 1;
-
-    // // #pragma omp for ordered
-    // // original
-    // // for (int k = 1; k <= iterations; k++)
-    // // torsion
-    // for (int j = 1; j < cols + iterations - 1; j++)
-
+    // for (int k = 1; k <= iterations; k++)
     // {
-    //     // original
-    //     // for (int j = 1; j < cols + rows - 1; j++)
-    //     // torsion
-    //     for (int k = max(0, j - cols + 1); k <= max(j, iterations - 1); k++)
+    //     for (int j = 1; j < cols + rows - 1; j++)
     //     {
     //         for (int i = max(0, j - cols + 1); i <= min(j, rows - 1); i++)
     //         {
@@ -56,29 +73,6 @@ void solveSecond(const int rows, const int cols, const int iterations, const str
     //         }
     //     }
     // }
-
-    int lastColumnJ = cols - 1;
-
-    // the original with 3 perfectly nested loops, 1 torsion, tested and functional
-    for (int k = 1; k <= iterations; k++)
-    {
-        for (int j = 1; j < cols + rows - 1; j++)
-        {
-            for (int i = max(0, j - cols + 1); i <= min(j, rows - 1); i++)
-            {
-                if ((j - i) != 0)
-                {
-                    // usleep(TIMEWAITMICRO);
-                    matrix[i][lastColumnJ - (j - i)] += matrix[i][(lastColumnJ - (j - i)) + 1];
-                }
-                else
-                {
-                    // usleep(TIMEWAITMICRO);
-                    matrix[i][lastColumnJ] += i;
-                }
-            }
-        }
-    }
 
 
 }
