@@ -24,12 +24,42 @@ int min(int a, int b) {
     return a <= b ? a : b;
 }
 
-// rework but with perfectly nested loops
+// rework but with 3 perfectly nested loops and torsion applied twice
 void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int **matrix)
 {
+    // int lastColumnJ = cols - 1;
+
+    // // #pragma omp for ordered
+    // // original
+    // // for (int k = 1; k <= iterations; k++)
+    // // torsion
+    // for (int j = 1; j < cols + iterations - 1; j++)
+
+    // {
+    //     // original
+    //     // for (int j = 1; j < cols + rows - 1; j++)
+    //     // torsion
+    //     for (int k = max(0, j - cols + 1); k <= max(j, iterations - 1); k++)
+    //     {
+    //         for (int i = max(0, j - cols + 1); i <= min(j, rows - 1); i++)
+    //         {
+    //             if ((j - i) != 0)
+    //             {
+    //                 // usleep(TIMEWAITMICRO);
+    //                 matrix[i][lastColumnJ - (j - i)] += matrix[i][(lastColumnJ - (j - i)) + 1];
+    //             }
+    //             else
+    //             {
+    //                 // usleep(TIMEWAITMICRO);
+    //                 matrix[i][lastColumnJ] += i;
+    //             }
+    //         }
+    //     }
+    // }
+
     int lastColumnJ = cols - 1;
 
-    // #pragma omp for ordered
+    // the original with 3 perfectly nested loops, 1 torsion, tested and functional
     for (int k = 1; k <= iterations; k++)
     {
         for (int j = 1; j < cols + rows - 1; j++)
@@ -38,17 +68,19 @@ void solveSecond(const int rows, const int cols, const int iterations, const str
             {
                 if ((j - i) != 0)
                 {
-                    usleep(TIMEWAITMICRO);
+                    // usleep(TIMEWAITMICRO);
                     matrix[i][lastColumnJ - (j - i)] += matrix[i][(lastColumnJ - (j - i)) + 1];
                 }
                 else
                 {
-                    usleep(TIMEWAITMICRO);
+                    // usleep(TIMEWAITMICRO);
                     matrix[i][lastColumnJ] += i;
                 }
             }
         }
     }
+
+
 }
 
 // this current code has 2 for loops nested within another for loop.
