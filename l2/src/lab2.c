@@ -9,11 +9,12 @@
 #define ROWS 12
 #define COLS 12
 // in nanoseconds, set for 50 milliseconds
-// #define TIMEWAITNANO 50000000L
-#define TIMEWAITNANO 1000L
+#define TIMEWAITNANO 50000000L
+// #define TIMEWAITNANO 1000L
+
 // in microseconds, set for 50 milliseconds
-// #define TIMEWAITMICRO 50000
-#define TIMEWAITMICRO 1000
+#define TIMEWAITMICRO 50000
+// #define TIMEWAITMICRO 1000
 
 
 int max(int a, int b) {
@@ -24,49 +25,26 @@ int min(int a, int b) {
     return a <= b ? a : b;
 }
 
-// this current code has 2 for loops nested within another for loop.
-// issues - struggling to parallelize this.
 void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int **matrix)
 {
+    // better to have a loop iterating forwards than backwards
     int lastColumnJ = cols - 1;
 
-    // #pragma omp for ordered
-    for (int k = 1; k <= iterations; k++)
+    // we use dynamic scheduling for load balancing because the k loop within our i loop varies.
+    #pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < rows; i++)
     {
-#pragma omp parallel \
-    shared(matrix)
+        for (int k = 1; k <= iterations; k++)
         {
-            // #pragma omp critical
-            // #pragma omp for
-            // #pragma omp single
-            for (int i = 0; i < rows; i++)
+            usleep(TIMEWAITMICRO);
+            // nanosleep(&ts_sleep, NULL);
+            matrix[i][lastColumnJ] += i;
+
+            for (int j = 1; j <= lastColumnJ; j++)
             {
                 usleep(TIMEWAITMICRO);
-                matrix[i][lastColumnJ] += i;
-            }
-
-            // no torsion applied
-            // for (int i = 0; i < rows; i++)
-            // {
-            //     for (int j = 1; j <= lastColumnJ; j++)
-            //     {
-            //         matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
-            //     }
-            // }
-            // TORSION, with if statement
-// #pragma omp for collapse(2) -- doesn;'t wrk'
-#pragma omp for
-            for (int j = 1; j < cols + rows - 1; j++)
-            {
-                for (int i = max(0, j - cols + 1); i <= min(j, rows - 1); i++)
-                {
-                    if ((j - i) != 0)
-                    {
-                        usleep(TIMEWAITMICRO);
-                        // #pragma omp critical
-                        matrix[i][lastColumnJ - (j - i)] += matrix[i][(lastColumnJ - (j - i)) + 1];
-                    }
-                }
+                // nanosleep(&ts_sleep, NULL);
+                matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
             }
         }
     }
@@ -133,18 +111,15 @@ int min(int a, int b);
 
 void solveFirst(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int **matrix)
 {
-#pragma omp parallel \
-    shared(matrix)
+    // we use collapse since we have 2 perfectly nested loops
+    #pragma omp for collapse(2)
+    for (int i = 0; i < rows; i++)
     {
-#pragma omp for collapse(2)
-        for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
         {
-            for (int j = 0; j < cols; j++)
-            {
-                usleep(TIMEWAITMICRO);
-                // nanosleep(&ts_sleep, NULL);
-                matrix[i][j] += i * iterations + j * iterations;
-            }
+            usleep(TIMEWAITMICRO);
+            // nanosleep(&ts_sleep, NULL);
+            matrix[i][j] += i * iterations + j * iterations;
         }
     }
 }
@@ -175,7 +150,7 @@ int main(int argc, char* argv[]) {
 
     int ** matrix = allocateMatrix(ROWS, COLS);
 
-    // _______________________ Sequential
+    // ______________________________________________ Sequential
     struct timeval timestamp_s_seq;
     struct timeval timestamp_e_seq;
 
@@ -190,7 +165,7 @@ int main(int argc, char* argv[]) {
     
     printMatrix(ROWS, COLS, matrix);
 
-    // _______________________ Parallel
+    // ______________________________________________ Parallel
     struct timeval timestamp_s_par;
     struct timeval timestamp_e_par;
 
@@ -204,7 +179,7 @@ int main(int argc, char* argv[]) {
     gettimeofday(&timestamp_e_par, NULL);
     printMatrix(ROWS, COLS, matrix);
 
-    // _______________________Statistics
+    // ______________________________________________ Statistics
     printStatistics(nbThreads, timestamp_s_seq, timestamp_e_seq, timestamp_s_par, timestamp_e_par);
     deallocateMatrix(ROWS, matrix);
 
