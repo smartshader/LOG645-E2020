@@ -9,11 +9,12 @@
 #define ROWS 12
 #define COLS 12
 // in nanoseconds, set for 50 milliseconds
-// #define TIMEWAITNANO 50000000L
-#define TIMEWAITNANO 1000L
+#define TIMEWAITNANO 50000000L
+// #define TIMEWAITNANO 1000L
+
 // in microseconds, set for 50 milliseconds
-// #define TIMEWAITMICRO 50000
-#define TIMEWAITMICRO 1000
+#define TIMEWAITMICRO 50000
+// #define TIMEWAITMICRO 1000
 
 
 int max(int a, int b) {
@@ -24,139 +25,29 @@ int min(int a, int b) {
     return a <= b ? a : b;
 }
 
-// rework but with 3 perfectly nested loops and torsion applied twice
 void solveSecond(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int **matrix)
 {
+    // better to have a loop iterating forwards than backwards
     int lastColumnJ = cols - 1;
-    int maxJ = cols + rows - 1;
 
-// #pragma omp parallel
-//     shared(matrix)
-
-        // for (int j = 1; j < maxJ + iterations - 1; j++)
-        // {
-        //     // #pragma omp parallel for shared (matrix) ordered
-        //     for (int k = max(0, j - maxJ + 1); k <= min(j, iterations - 1); k++)
-        //     {
-        //         #pragma omp parallel for
-        //         for (int i = max(0, j - k - cols + 1); i <= min(j - k, rows - 1); i++)
-        //         {
-        //             #pragma omp critical
-        //             {
-        //                 if ((j - k - i) != 0)
-        //                 {
-        //                     usleep(TIMEWAITMICRO);
-        //                     // #pragma omp critical
-        //                     // #pragma omp atomic
-        //                     matrix[i][lastColumnJ - (j - k - i)] += matrix[i][(lastColumnJ - (j - k - i)) + 1];
-        //                 }
-        //                 else
-        //                 {
-        //                     usleep(TIMEWAITMICRO);
-        //                     // #pragma omp critical
-        //                     // #pragma omp atomic
-        //                     matrix[i][lastColumnJ] += i;
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-
-    // // the original with 3 perfectly nested loops, 1 torsion, tested and functional
-
-    // int lastColumnJ = cols - 1;
-    // for (int k = 1; k <= iterations; k++)
-    // {
-    //     for (int j = 1; j < cols + rows - 1; j++)
-    //     {
-    //         for (int i = max(0, j - cols + 1); i <= min(j, rows - 1); i++)
-    //         {
-    //             if ((j - i) != 0)
-    //             {
-    //                 // usleep(TIMEWAITMICRO);
-    //                 matrix[i][lastColumnJ - (j - i)] += matrix[i][(lastColumnJ - (j - i)) + 1];
-    //             }
-    //             else
-    //             {
-    //                 // usleep(TIMEWAITMICRO);
-    //                 matrix[i][lastColumnJ] += i;
-    //             }
-    //         }
-    //     }
-    // }
-
-    // #pragma omp parallel for collapse (3) shared (matrix) schedule (dynamic) ordered
-        // for (int k = 1; k <= iterations; k++)
-        // {
-        //     for (int i = 0; i < rows; i++)
-        //     {
-        //         for (int j = cols - 1; j >= 0; j--)
-        //         {
-        //             if (j == cols - 1)
-        //             {
-        //                 matrix[i][j] = matrix[i][j] + i;
-        //             }
-        //             else
-        //             {
-        //                 matrix[i][j] = matrix[i][j] + matrix[i][j + 1];
-        //             }
-        //         }
-        //     }
-        // }
-
-        // int lastColumnJ = cols - 1;
-        #pragma omp parallel for collapse(2)
-        for (int i = 0; i < rows; i++)
+    // we use dynamic scheduling for load balancing because the k loop within our i loop varies.
+    #pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < rows; i++)
+    {
+        for (int k = 1; k <= iterations; k++)
         {
-            for (int k = 1; k <= iterations; k++)
+            usleep(TIMEWAITMICRO);
+            // nanosleep(&ts_sleep, NULL);
+            matrix[i][lastColumnJ] += i;
+
+            for (int j = 1; j <= lastColumnJ; j++)
             {
                 usleep(TIMEWAITMICRO);
-                matrix[i][lastColumnJ] += i;
-                for (int j = 1; j <= lastColumnJ; j++)
-                {
-                    usleep(TIMEWAITMICRO);
-                    matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
-                }
+                // nanosleep(&ts_sleep, NULL);
+                matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
             }
         }
-
-        // // int lastColumnJ = cols - 1;
-        // #pragma omp parallel for collapse(3) ordered
-        // for (int i = 0; i < rows; i++)
-        // {
-        //     for (int k = 1; k <= iterations; k++)
-        //     {
-        //         for (int j = 1; j <= lastColumnJ; j++)
-        //         {
-        //             if (j!= 0)
-        //             {
-        //                 matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
-        //             }
-        //             else
-        //             {
-        //                 matrix[i][lastColumnJ] += i;
-        //             }
-        //         }
-        //     }
-        // }
-
-        // for (int k = 1; k <= iterations; k++)
-        // {
-        //     for (int i = 0; i < rows; i++)
-        //     {
-        //         for (int j = cols - 1; j >= 0; j--)
-        //         {
-        //             if (j == cols - 1)
-        //             {
-        //                 matrix[i][j] = matrix[i][j] + i;
-        //             }
-        //             else
-        //             {
-        //                 matrix[i][j] = matrix[i][j] + matrix[i][j + 1];
-        //             }
-        //         }
-        //     }
-        // }
+    }
 }
 
 int ** allocateMatrix(int rows, int cols) {
@@ -220,18 +111,15 @@ int min(int a, int b);
 
 void solveFirst(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int **matrix)
 {
-#pragma omp parallel \
-    shared(matrix)
+    // we use collapse since we have 2 perfectly nested loops
+    #pragma omp for collapse(2)
+    for (int i = 0; i < rows; i++)
     {
-#pragma omp for collapse(2)
-        for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
         {
-            for (int j = 0; j < cols; j++)
-            {
-                usleep(TIMEWAITMICRO);
-                // nanosleep(&ts_sleep, NULL);
-                matrix[i][j] += i * iterations + j * iterations;
-            }
+            usleep(TIMEWAITMICRO);
+            // nanosleep(&ts_sleep, NULL);
+            matrix[i][j] += i * iterations + j * iterations;
         }
     }
 }
@@ -262,7 +150,7 @@ int main(int argc, char* argv[]) {
 
     int ** matrix = allocateMatrix(ROWS, COLS);
 
-    // _______________________ Sequential
+    // ______________________________________________ Sequential
     struct timeval timestamp_s_seq;
     struct timeval timestamp_e_seq;
 
@@ -277,7 +165,7 @@ int main(int argc, char* argv[]) {
     
     printMatrix(ROWS, COLS, matrix);
 
-    // _______________________ Parallel
+    // ______________________________________________ Parallel
     struct timeval timestamp_s_par;
     struct timeval timestamp_e_par;
 
@@ -291,7 +179,7 @@ int main(int argc, char* argv[]) {
     gettimeofday(&timestamp_e_par, NULL);
     printMatrix(ROWS, COLS, matrix);
 
-    // _______________________Statistics
+    // ______________________________________________ Statistics
     printStatistics(nbThreads, timestamp_s_seq, timestamp_e_seq, timestamp_s_par, timestamp_e_par);
     deallocateMatrix(ROWS, matrix);
 
