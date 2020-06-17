@@ -13,7 +13,7 @@
 // #define TIMEWAITNANO 1000L
 
 // in microseconds, set for 50 milliseconds
-#define TIMEWAITMICRO 50000
+#define TIMEWAITMICRO 25000
 // #define TIMEWAITMICRO 1000
 
 
