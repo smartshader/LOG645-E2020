@@ -8,11 +8,11 @@
 
 #define ROWS 12
 #define COLS 12
-// in nanoseconds, set for 50 milliseconds
-#define TIMEWAITNANO 50000000L
+// in nanoseconds, set for 25 milliseconds (system cannot work in 50ms)
+#define TIMEWAITNANO 25000000L
 // #define TIMEWAITNANO 1000L
 
-// in microseconds, set for 50 milliseconds
+// in microseconds, set for 25 milliseconds (system cannot work in 50ms)
 #define TIMEWAITMICRO 25000
 // #define TIMEWAITMICRO 1000
 
@@ -36,14 +36,14 @@ void solveSecond(const int rows, const int cols, const int iterations, const str
     {
         for (int k = 1; k <= iterations; k++)
         {
-            usleep(TIMEWAITMICRO);
-            // nanosleep(&ts_sleep, NULL);
+            // usleep(TIMEWAITMICRO);
+            nanosleep(&ts_sleep, NULL);
             matrix[i][lastColumnJ] += i;
 
             for (int j = 1; j <= lastColumnJ; j++)
             {
-                usleep(TIMEWAITMICRO);
-                // nanosleep(&ts_sleep, NULL);
+                // usleep(TIMEWAITMICRO);
+                nanosleep(&ts_sleep, NULL);
                 matrix[i][lastColumnJ - j] += matrix[i][lastColumnJ - j + 1];
             }
         }
@@ -112,13 +112,13 @@ int min(int a, int b);
 void solveFirst(const int rows, const int cols, const int iterations, const struct timespec ts_sleep, int **matrix)
 {
     // we use collapse since we have 2 perfectly nested loops
-    #pragma omp for collapse(2)
+    #pragma omp parallel for collapse(2)
     for (int i = 0; i < rows; i++)
     {
         for (int j = 0; j < cols; j++)
         {
-            usleep(TIMEWAITMICRO);
-            // nanosleep(&ts_sleep, NULL);
+            // usleep(TIMEWAITMICRO);
+            nanosleep(&ts_sleep, NULL);
             matrix[i][j] += i * iterations + j * iterations;
         }
     }
