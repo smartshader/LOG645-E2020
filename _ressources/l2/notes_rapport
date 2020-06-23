@@ -95,16 +95,12 @@ original code
 original code
 
     for (int k = 1; k <= iterations; k++)
-	{
 		for (int i = 0; i < rows; i++)
-		{
 			for (int j = cols - 1; j >= 0; j--)
-			{
 				if (j == cols - 1)
 				{
 					matrix[i][j] = matrix[i][j] + i;
-				}
-				else
+				} else
 				{
 					matrix[i][j] = matrix[i][j] + matrix[i][j+1];
 				}
