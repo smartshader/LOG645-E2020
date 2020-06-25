@@ -1,19 +1,21 @@
-# --------- run.sh // TESTING VERSION ---------------
+# --------- run.sh // TESTING SECTION ---------------
 # This particular section of run.sh adds additional arguments to our mpirun for various testing features
+    # mpirun -np [a] ./lab3 [1] [2] [3] [4] [5] [6]
     # ________________ MANDATORY (for submission)
+    # a: (int)    a - # of processors to use (1, 2, 4, 8, 16, 32, 64)
     # 1: (int)    n - number of lines
     # 2: (int)    m - number of columns
     # 3: (int)    tp - number of timesteps/iterations
     # 4: (double) td - discretized time
     # 5: (float)  h - size of each tile subdivison (square hxh)
-
+    #
     # ________________ OPTIONAL (used for dev purposes)
     # 6: (bool) enable/disables matrix output
 
 make all
 echo ""
 echo "<<<"
-mpirun -np 2 ./lab3 6 6 300 0.01 1
+mpirun -np 2 ./lab3 5 5 300 0.01 1 9 9
 echo ">>>"
 make clean
 

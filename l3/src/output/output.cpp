@@ -16,7 +16,7 @@ using std::setw;
 void printMatrix(int rows, int cols, double ** matrix) {
     for(int row = 0; row < rows; row++) {
         for(int col = 0; col < cols; col++) {
-            cout << fixed << setw(12) << setprecision(2) << matrix[row][col] << flush;
+            cout << fixed << setw(4) << setprecision(0) << matrix[row][col] << flush;
         }
 
         cout << endl << flush;

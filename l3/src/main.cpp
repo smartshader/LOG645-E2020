@@ -10,11 +10,12 @@
 #include "solver/solver.hpp"
 
 void invalidArguments();
-void command(int argc, char* argv[]);
 
-void initial(int rows, int cols);
-long sequential(int rows, int cols, int iters, double td, double h, int sleep);
-long parallel(int rows, int cols, int iters, double td, double h, int sleep);
+void printInputArguments(int argc, char* argv[]);
+void initialMatrixDisplayOnly(int rows, int cols);
+
+long sequential(int rows, int cols, int iters, double td, double h, int sleep, double ** tempSeqMatrix);
+long parallel(int rows, int cols, int iters, double td, double h, int sleep, double ** tempParMatrix);
 
 using namespace std::chrono;
 
@@ -46,6 +47,10 @@ int main(int argc, char* argv[]) {
     long runtime_seq = 0;
     long runtime_par = 0;
 
+    // matrix placeholders for comparison
+    double ** tempSeqMatrix = NULL;
+    double ** tempParMatrix = NULL;
+
     // at the minimum, we need at least 5 arguments
     // ________________ MANDATORY (for submission)
     // 1: (int)    n - number of lines
@@ -74,22 +79,47 @@ int main(int argc, char* argv[]) {
     td = stod(argv[4], nullptr);
     h = stod(argv[5], nullptr);
 
+    // matrix placeholders for comparison
+    tempSeqMatrix = allocateMatrix(rows, cols);
+    tempParMatrix = allocateMatrix(rows,cols);
     
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if(0 == rank) {
-        command(argc, argv);
-        initial(rows, cols);
-        runtime_seq = sequential(rows, cols, iters, td, h, sleep);
+        printInputArguments(argc, argv);
+        initialMatrixDisplayOnly(rows, cols);
+        runtime_seq = sequential(rows, cols, iters, td, h, sleep, tempSeqMatrix);
+
+        // compares two EQUAL matrixes
+        fillMatrix(rows, cols, tempSeqMatrix);
+        cout << "Matrix Seq (true test) : tempSeqMatrix" << endl << flush;
+        printMatrix(rows, cols, tempSeqMatrix);
+        fillMatrix(rows, cols, tempParMatrix);
+        cout << "Matrix Par (true test) : tempParMatrix" << endl << flush;
+        printMatrix(rows, cols, tempParMatrix);
+        // TODO : Filipe compare function here. please test different sizes. All results must return true as matching matrixes.
+
+        // compares two NON-EQUAL matrixes
+        fillMatrixWithSeed(rows, cols, 2.5, tempSeqMatrix);
+        cout << "Matrix Seq (false test) : tempSeqMatrix" << endl << flush;
+        printMatrix(rows, cols, tempSeqMatrix);
+        fillMatrixWithSeed(rows, cols, 4.3, tempParMatrix);
+        cout << "Matrix Par (false test) : tempParMatrix" << endl << flush;
+        printMatrix(rows, cols, tempParMatrix);
+        // TODO : Filipe add compare matrix function here.
     }
 
     // Ensure that no process will start computing early.
     MPI_Barrier(MPI_COMM_WORLD);
 
-    runtime_par = parallel(rows, cols, iters, td, h, sleep);
+    runtime_par = parallel(rows, cols, iters, td, h, sleep, tempParMatrix);
 
+    // _________________ FINAL RESULTS
     if(0 == rank) {
         printStatistics(1, runtime_seq, runtime_par);
+
+        deallocateMatrix(rows, tempSeqMatrix);
+        deallocateMatrix(rows, tempParMatrix);
     }
 
     mpi_status = MPI_Finalize();
@@ -97,7 +127,6 @@ int main(int argc, char* argv[]) {
         cout << "Execution finalization terminated in error." << endl << flush;
         return EXIT_FAILURE;
     }
-
     return EXIT_SUCCESS;
 }
 
@@ -106,8 +135,8 @@ void invalidArguments() {
     cout << "Arguments: m n np td h" << endl << flush;
 }
 
-void command(int argc, char* argv[]) {
-    cout << "Command:" << flush;
+void printInputArguments(int argc, char* argv[]) {
+    cout << "Configuration:" << flush;
 
     for(int i = 0; i < argc; i++) {
         cout << " " << argv[i] << flush;
@@ -116,23 +145,24 @@ void command(int argc, char* argv[]) {
     cout << endl << flush;
 }
 
-void initial(int rows, int cols) {
+void initialMatrixDisplayOnly(int rows, int cols) {
     double ** matrix = allocateMatrix(rows, cols);
-    fillMatrix(rows, cols, matrix);
 
+    fillMatrix(rows, cols, matrix);
     cout << "-----  INITIAL   -----" << endl << flush;
     printMatrix(rows, cols, matrix);
-
     deallocateMatrix(rows, matrix);
 }
 
-long sequential(int rows, int cols, int iters, double td, double h, int sleep) {
+long sequential(int rows, int cols, int iters, double td, double h, int sleep, double ** tempSeqMatrix) {
     double ** matrix = allocateMatrix(rows, cols);
     fillMatrix(rows, cols, matrix);
 
     time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
     solveSeq(rows, cols, iters, td, h, sleep, matrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
+
+     // TODO Filipe : function copy matrix values to seqMatrix goes here
 
     cout << "----- SEQUENTIAL -----" << endl << flush;
     printMatrix(rows, cols, matrix);
@@ -141,7 +171,7 @@ long sequential(int rows, int cols, int iters, double td, double h, int sleep) {
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 }
 
-long parallel(int rows, int cols, int iters, double td, double h, int sleep) {
+long parallel(int rows, int cols, int iters, double td, double h, int sleep, double ** tempParMatrix) {
     double ** matrix = allocateMatrix(rows, cols);
     fillMatrix(rows, cols, matrix);
 
@@ -149,10 +179,13 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep) {
     solvePar(rows, cols, iters, td, h, sleep, matrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
+    // TODO Filipe : function copy matrix values to parMatrix goes here
+
     if(nullptr != *matrix) {
         cout << "-----  PARALLEL  -----" << endl << flush;
         printMatrix(rows, cols, matrix);
         deallocateMatrix(rows, matrix);
+
     }
 
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();

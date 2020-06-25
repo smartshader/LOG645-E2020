@@ -12,6 +12,18 @@ using std::memcpy;
 using std::this_thread::sleep_for;
 using std::chrono::microseconds;
 
+
+void solvePar(int rows, int cols, int iterations, double td, double h, int sleep, double ** matrix) {
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if(0 != rank) {
+        deallocateMatrix(rows, matrix);
+    }
+
+    sleep_for(microseconds(500000));
+}
+
 void solveSeq(int rows, int cols, int iterations, double td, double h, int sleep, double ** matrix) {
     double c, l, r, t, b;
     
@@ -43,13 +55,3 @@ void solveSeq(int rows, int cols, int iterations, double td, double h, int sleep
     }
 }
 
-void solvePar(int rows, int cols, int iterations, double td, double h, int sleep, double ** matrix) {
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    if(0 != rank) {
-        deallocateMatrix(rows, matrix);
-    }
-
-    sleep_for(microseconds(500000));
-}
