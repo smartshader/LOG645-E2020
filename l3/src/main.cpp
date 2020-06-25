@@ -9,7 +9,7 @@
 #include "output/output.hpp"
 #include "solver/solver.hpp"
 
-void usage();
+void invalidArguments();
 void command(int argc, char* argv[]);
 
 void initial(int rows, int cols);
@@ -46,12 +46,23 @@ int main(int argc, char* argv[]) {
     long runtime_seq = 0;
     long runtime_par = 0;
 
-    if(6 != argc) {
-        usage();
+    // at the minimum, we need at least 5 arguments
+    // ________________ MANDATORY (for submission)
+    // 1: (int)    n - number of lines
+    // 2: (int)    m - number of columns
+    // 3: (int)    tp - number of timesteps/iterations
+    // 4: (double) td - discretized time
+    // 5: (float)  h - size of each tile subdivison (square hxh)
+
+    // ________________ OPTIONAL (used for dev purposes)
+    // 6: (bool) enable/disables matrix output
+    if(argc < 5) {
+        invalidArguments();
         return EXIT_FAILURE;
     }
 
     mpi_status = MPI_Init(&argc, &argv);
+    
     if(MPI_SUCCESS != mpi_status) {
         cout << "MPI initialization failure." << endl << flush;
         return EXIT_FAILURE;
@@ -90,7 +101,7 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
 }
 
-void usage() {
+void invalidArguments() {
     cout << "Invalid arguments." << endl << flush;
     cout << "Arguments: m n np td h" << endl << flush;
 }
