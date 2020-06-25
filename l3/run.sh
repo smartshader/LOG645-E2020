@@ -15,7 +15,7 @@
 make all
 echo ""
 echo "<<<"
-mpirun -np 2 ./lab3 5 5 300 0.01 1 9 9
+mpirun -np 2 ./lab3 7 10 300 0.01 1 9 9
 echo ">>>"
 make clean
 

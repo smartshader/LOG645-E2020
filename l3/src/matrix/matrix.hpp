@@ -2,24 +2,26 @@
 #define MATRIX_HPP
 
 double ** allocateMatrix(int rows, int cols);
+
+// should work for both partialMatrix and regular matrices
 void deallocateMatrix(int rows, double ** matrix);
 
 void fillMatrix(int rows, int cols, double ** matrix);
 
-// for dev/test purposes
-void fillMatrixWithSeed(int rows, int cols, float seed, double ** matrix);
+// for dev/test purposes. same as fillMatrix but with a seed number vary values
+void debug_fillMatrixWithSeed(int rows, int cols, float seed, double ** matrix);
 
 // todo Filipe
-bool cloneMatValuesAtoB(double ** matrixB, double ** matrixA, int rows, int cols);
+bool cloneMatValuesAtoB(int rows, int cols, double ** matrixA, double ** matrixB);
 
 // todo Filipe
-bool isMatEqual(double ** matrixA, double ** matrixB, int rows, int cols);
+bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB);
 
 // todo Howard
-double ** allocatePartialMatFromTargetMat(double ** partialMatrix, int * pmRows, int * pmCols, double ** targetMatrix, int tmRows, int tmCols);
+double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** partialMatrix, int tmRows, int tmCols, double ** targetMatrix);
 
 // todo Filipe
-bool mirrorPartialMatToTargetMat(double ** partialMatrix, int pmRows, int pmCols, double ** targetMatrix, int tmRows, int tmCols);
+bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double ** partialMatrix, int tmRows, int tmCols, double ** targetMatrix);
     // takes a partial matrix and mirrors it to the remaining 3 quadrants. returns true if successful.
     // must adapt to various sizes
 

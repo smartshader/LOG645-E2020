@@ -34,3 +34,13 @@ void printStatistics(int threads, long runtime_seq, long runtime_par) {
     cout << "Acceleration      : " << acceleration << endl << flush;
     cout << "Efficiency        : " << efficiency << endl << flush;
 }
+
+void debug_printStatistics(int threads, long runtime_seq, long runtime_par,double ** matrixA, double ** matrixB) {
+    double acceleration = 1.0 * runtime_seq / runtime_par;
+    double efficiency = acceleration / threads;
+
+    cout << "Runtime sequential: " << runtime_seq / 1000000.0 << " seconds" << endl << flush;
+    cout << "Runtime parallel  : " << runtime_par / 1000000.0 << " seconds" << endl << flush;
+    cout << "Acceleration      : " << acceleration << endl << flush;
+    cout << "Efficiency        : " << efficiency << endl << flush;
+}

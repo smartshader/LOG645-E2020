@@ -100,10 +100,10 @@ int main(int argc, char* argv[]) {
         // TODO : Filipe compare function here. please test different sizes. All results must return true as matching matrixes.
 
         // compares two NON-EQUAL matrixes
-        fillMatrixWithSeed(rows, cols, 2.5, tempSeqMatrix);
+        debug_fillMatrixWithSeed(rows, cols, 2.5, tempSeqMatrix);
         cout << "Matrix Seq (false test) : tempSeqMatrix" << endl << flush;
         printMatrix(rows, cols, tempSeqMatrix);
-        fillMatrixWithSeed(rows, cols, 4.3, tempParMatrix);
+        debug_fillMatrixWithSeed(rows, cols, 4.3, tempParMatrix);
         cout << "Matrix Par (false test) : tempParMatrix" << endl << flush;
         printMatrix(rows, cols, tempParMatrix);
         // TODO : Filipe add compare matrix function here.
