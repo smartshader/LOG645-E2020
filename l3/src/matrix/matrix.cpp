@@ -36,7 +36,7 @@ void debug_fillMatrixWithSeed(int rows, int cols, float seed, double ** matrix) 
     }
 }
 
-bool cloneMatValuesAtoB(int rowsA, int colsA, double ** matrixA, int rowsB, int colsB, double ** matrixB){
+bool cloneMatValuesAtoB(int rows, int cols, double matrixA, int rowsB, int colsB, double ** matrixB){
     // clones matrix values from A to B, returns true if successful, false if there's an error.
 
     return true;
@@ -47,14 +47,31 @@ bool isMatEqual(int rowsA, int colsA, double ** matrixA, int rowsB, int colsB, d
     return true;
 }
 
-double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** partialMatrix, int tmRows, int tmCols, double ** targetMatrix){
+double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** partialMatrix, int tmRows, int tmCols, double targetMatrix){
     // allocate, initiazes and returns a partialMatrix. the partialMatrix's # number of rows and cols are set based on its targetMatrix
     // must adapt to various sizes
+
+    // TODO
+    // must calculate the correct rows/cols for partialMatrix
+    int rowsCalculated = 0;
+    int colsCalculated = 0;
+
+    // assign it
+    *pmRows = rowsCalculated;
+    *pmCols = colsCalculated;
+
+    // allocate it
+    double ** partialMatrix = new double*[rowsCalculated];
+    for(int i = 0; i < rowsCalculated; i++) {
+        partialMatrix[i] = new double[colsCalculated];
+    }
+    
+    // TODO fill it
 
     return partialMatrix;
 }
 
-bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double ** partialMatrix, int tmRows, int tmCols, double ** targetMatrix){
+bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double partialMatrix, int tmRows, int tmCols, double ** targetMatrix){
     // takes a partial matrix and mirrors it to the remaining 3 quadrants of the targetMatrix. returns true if successful.
     // must adapt to various sizes
     return true;
