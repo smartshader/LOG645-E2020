@@ -36,13 +36,13 @@ void debug_fillMatrixWithSeed(int rows, int cols, float seed, double ** matrix) 
     }
 }
 
-bool cloneMatValuesAtoB(int rows, int cols, double ** matrixA, double ** matrixB){
+bool cloneMatValuesAtoB(int rowsA, int colsA, double ** matrixA, int rowsB, int colsB, double ** matrixB){
     // clones matrix values from A to B, returns true if successful, false if there's an error.
 
     return true;
 }
 
-bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB){
+bool isMatEqual(int rowsA, int colsA, double ** matrixA, int rowsB, int colsB, double ** matrixB){
     // compares two matrixes and returns true is they have matching values, false if not.
     return true;
 }
