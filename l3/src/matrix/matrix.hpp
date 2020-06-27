@@ -12,10 +12,10 @@ void fillMatrix(int rows, int cols, double ** matrix);
 void debug_fillMatrixWithSeed(int rows, int cols, float seed, double ** matrix);
 
 // todo Filipe
-bool cloneMatValuesAtoB(int rows, int cols, double matrixA, int rowsB, int colsB, double ** matrixB);
+bool cloneMatValuesAtoB(int rows, int cols, double ** matrixA, double ** matrixB);
 
 // todo Filipe
-bool isMatEqual(int rowsA, int colsA, double ** matrixA, int rowsB, int colsB, double ** matrixB);
+bool isMatEqual(double ** matrixA, double ** matrixB);
 
 // todo Howard
 double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** partialMatrix, int tmRows, int tmCols, double targetMatrix);
