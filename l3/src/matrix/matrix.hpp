@@ -15,7 +15,7 @@ void debug_fillMatrixWithSeed(int rows, int cols, float seed, double ** matrix);
 bool cloneMatValuesAtoB(int rows, int cols, double ** matrixA, double ** matrixB);
 
 // todo Filipe
-bool isMatEqual(double ** matrixA, double ** matrixB);
+bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB);
 
 // todo Howard
 double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** partialMatrix, int tmRows, int tmCols, double targetMatrix);

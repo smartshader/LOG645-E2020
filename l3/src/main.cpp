@@ -98,6 +98,13 @@ int main(int argc, char* argv[]) {
         cout << "Matrix Par (true test) : tempParMatrix" << endl << flush;
         printMatrix(rows, cols, tempParMatrix);
         // TODO : Filipe compare function here. please test different sizes. All results must return true as matching matrixes.
+		bool isEqual = isMatEqual(rows, cols, tempSeqMatrix, tempParMatrix);
+		if(isEqual == true){
+			printf("Matrix A and B are equal\n");		
+		}
+		else{
+			printf("Matrix A and B are different\n");			
+		}
 
         // compares two NON-EQUAL matrixes
         debug_fillMatrixWithSeed(rows, cols, 2.5, tempSeqMatrix);
@@ -107,6 +114,14 @@ int main(int argc, char* argv[]) {
         cout << "Matrix Par (false test) : tempParMatrix" << endl << flush;
         printMatrix(rows, cols, tempParMatrix);
         // TODO : Filipe add compare matrix function here.
+		isEqual = isMatEqual(rows, cols, tempSeqMatrix, tempParMatrix);
+
+		if(isEqual == true){
+			printf("Matrix A and B are equal\n");		
+		}
+		else{
+			printf("Matrix A and B are different\n");			
+		}
     }
 
     // Ensure that no process will start computing early.
@@ -163,7 +178,7 @@ long sequential(int rows, int cols, int iters, double td, double h, int sleep, d
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
      // TODO Filipe : function copy matrix values to seqMatrix goes here
-
+	cloneMatValuesAtoB(rows, cols, matrix, tempSeqMatrix);
     cout << "----- SEQUENTIAL -----" << endl << flush;
     printMatrix(rows, cols, matrix);
 
@@ -180,7 +195,8 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, dou
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
     // TODO Filipe : function copy matrix values to parMatrix goes here
-
+	cloneMatValuesAtoB(rows, cols, matrix, tempParMatrix);
+	
     if(nullptr != *matrix) {
         cout << "-----  PARALLEL  -----" << endl << flush;
         printMatrix(rows, cols, matrix);

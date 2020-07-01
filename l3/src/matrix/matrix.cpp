@@ -1,4 +1,14 @@
+#include <thread>
+#include <iostream>
+#include <chrono>
+
 #include "matrix.hpp"
+
+using namespace std::chrono;
+
+using std::cerr;
+using std::endl;
+using std::flush;
 
 double ** allocateMatrix(int rows, int cols) {
     double ** matrix = new double*[rows];
@@ -38,35 +48,26 @@ void debug_fillMatrixWithSeed(int rows, int cols, float seed, double ** matrix) 
 
 bool cloneMatValuesAtoB(int rows, int cols, double ** matrixA, double ** matrixB){
     // clones matrix values from A to B, returns true if successful, false if there's an error.
-	int rowsA = sizeof(matrixA) / sizeof(matrixA[0]);
-	int colsA = sizeof(matrixA[0]) / sizeof(matrixA[0][0]);
-	int rowsB = sizeof(matrixB) / sizeof(matrixB[0]);
-	int colsB = sizeof(matrixB[0]) / sizeof(matrixB[0][0]);	
-	if (rows > rowsA || rows > rowsB || cols > colsA || cols > colsB){
+	try{
+		for(int row = 0; row < rows; row++) {
+			for(int col = 0; col < cols; col++) {
+				cerr << "Row: " << row << "      Col: " << col << endl << flush;
+				
+				cerr << "Value: " << matrixA[row][col] << endl << flush;				
+				matrixB[row][col] = matrixA[row][col];
+			}
+		}	
+		return true;	
+	}
+	catch(...){
 		return false;
 	}
-
-	for(int row = 0; row < rows; row++) {
-		for(int col = 0; col < cols; col++) {
-			matrixB[row][col] = matrixA[row][col];
-		}
-	}	
-    return true;
 }
 
-bool isMatEqual(double ** matrixA, double ** matrixB){
+bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB){
     // compares two matrixes and returns true is they have matching values, false if not.
-	int rowsA = sizeof(matrixA) / sizeof(matrixA[0]);
-	int colsA = sizeof(matrixA[0]) / sizeof(matrixA[0][0]);
-	int rowsB = sizeof(matrixB) / sizeof(matrixB[0]);
-	int colsB = sizeof(matrixB[0]) / sizeof(matrixB[0][0]);
-	
-	if(rowsA != rowsB || colsA != colsB){
-		return false;
-	}
-	
-	for(int row =0; row < rowsA; row++){
-		for(int col=0; col < colsA; col++){
+	for(int row =0; row < rows; row++){
+		for(int col=0; col < cols; col++){
 			if(matrixA[row][col] != matrixB[row][col]) {
 				return false;
 			}
@@ -94,14 +95,42 @@ double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** 
         partialMatrix[i] = new double[colsCalculated];
     }
     
+	
     // TODO fill it
 
     return partialMatrix;
 }
 
-bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double partialMatrix, int tmRows, int tmCols, double ** targetMatrix){
+bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double ** partialMatrix, int tmRows, int tmCols, double ** targetMatrix){
     // takes a partial matrix and mirrors it to the remaining 3 quadrants of the targetMatrix. returns true if successful.
     // must adapt to various sizes
+	if(tmRows <= pmRows * 2 || tmCols <= pmCols * 2){
+		return false;
+	}
+	for(int tmRow = 0; tmRow < tmRows; tmRow++) {
+		for(int tmCol = 0; tmCol < tmCols; tmCol++) {
+			if(tmRow == 0 ||  tmRow == tmRows - 1 || tmCol == 0 || tmCol == tmCols - 1){
+				targetMatrix[tmRow][tmCol] = 0;
+			}
+			else{
+				int pmRow, pmCol = 0;
+				if(tmRow > pmRows){
+					pmRow = tmRows - (tmRow + 2);
+				}
+				else{
+					pmRow = tmRow - 1;
+				}
+				
+				if(tmCol > pmCols){
+					pmCol = tmCols - (tmCol + 2);
+				}
+				else{
+					pmCol = tmCol - 1;
+				}
+				targetMatrix[tmRow][tmCol] = partialMatrix[pmRow][pmCol];
+			}
+		}
+	}
     return true;
 }
 
