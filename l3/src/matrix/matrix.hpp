@@ -31,7 +31,6 @@ bool isMatEqual(int rowsA, int colsA, double ** matrixA, int rowsB, int colsB, d
     // │ 1 2 │
     // │ 3 4 │
     // └─────┘
-
     // EXAMPLE 2
     // ┌───────────────────┐
     // │ 0   0   0   0   0 │
@@ -44,6 +43,7 @@ bool isMatEqual(int rowsA, int colsA, double ** matrixA, int rowsB, int colsB, d
     // │  9  12 │
     // │ 12  16 │
     // └────────┘
+// from a targetMatrix, extract a partialMatrix
 double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** partialMatrix, int tmRows, int tmCols, double targetMatrix);
 
 // todo Filipe
