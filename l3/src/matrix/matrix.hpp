@@ -18,6 +18,32 @@ bool cloneMatValuesAtoB(int rows, int cols, double matrixA, int rowsB, int colsB
 bool isMatEqual(int rowsA, int colsA, double ** matrixA, int rowsB, int colsB, double ** matrixB);
 
 // todo Howard
+    // EXAMPLE 1
+    // ┌─────────────┐
+    // │ 0 0 0 0 0 0 │
+    // │ 0 1 2 2 1 0 │
+    // │ 0 3 4 4 3 0 │
+    // │ 0 3 4 4 3 0 │
+    // │ 0 1 2 2 1 0 │
+    // │ 0 0 0 0 0 0 │
+    // └─────────────┘
+    // ┌─────┐
+    // │ 1 2 │
+    // │ 3 4 │
+    // └─────┘
+
+    // EXAMPLE 2
+    // ┌───────────────────┐
+    // │ 0   0   0   0   0 │
+    // │ 0   9  12   9   0 │
+    // │ 0  12  16  12   0 │
+    // │ 0   9  12   9   0 │
+    // │ 0   0   0   0   0 │
+    // └───────────────────┘
+    // ┌────────┐
+    // │  9  12 │
+    // │ 12  16 │
+    // └────────┘
 double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** partialMatrix, int tmRows, int tmCols, double targetMatrix);
 
 // todo Filipe
