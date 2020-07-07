@@ -1,0 +1,25 @@
+- adaptable to 
+    - rows
+    - columns
+    - number of processors (can vary from 1 to 64, with no specific pattern)
+
+- every matrix NxM (called the targetMatrix) has 0 borders on top and bottom.
+    - relevant innerMatrix is [N-2, M-2]
+    - values in the inner matrix are mirrored
+    - partialMatrix (1/4 of inner matrix) is used as input calculations
+    - table
+
+
+design : required algorithms
+    
+    - allocate partialMatrix based on targetMatrix
+    - mirror partialMatrix values to targetMatrix
+        - needs to take into consideration what targetMatrix was
+        - just because a partialMatrix is 6x2, doesn't mean the targetMatrix isn't odd
+    - cpu to matrix assignment algo
+        (based on the number of available CPUs, we need properly allocate the number of calculatable cells from our partialMatrix)
+    - target matrix
+
+
+____ OPENMPI VS MP
+Unlike OpenMP, there is no "parallel region" to enclose, the entire code is a "parallel region", but nothing is shared. 

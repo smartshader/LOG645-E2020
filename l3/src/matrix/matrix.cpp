@@ -76,6 +76,7 @@ bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB){
     return true;
 }
 
+// TODO howard
 double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** partialMatrix, int tmRows, int tmCols, double targetMatrix){
     // allocate, initiazes and returns a partialMatrix. the partialMatrix's # number of rows and cols are set based on its targetMatrix
     // must adapt to various sizes
