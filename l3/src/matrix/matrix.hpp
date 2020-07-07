@@ -11,16 +11,17 @@ void fillMatrix(int rows, int cols, double ** matrix);
 // for dev/test purposes. same as fillMatrix but with a seed number vary values
 void debug_fillMatrixWithSeed(int rows, int cols, float seed, double ** matrix);
 
-// todo Filipe
-bool cloneMatValuesAtoB(int rows, int cols, double matrixA, int rowsB, int colsB, double ** matrixB);
+// coded but when testing, doesn't work with the parallel matrix
+bool cloneMatValuesAtoB(int rows, int cols, double ** matrixA, double ** matrixB);
 
-// todo Filipe
-bool isMatEqual(int rowsA, int colsA, double ** matrixA, int rowsB, int colsB, double ** matrixB);
+// tested and function
+bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB);
 
 // todo Howard
 double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** partialMatrix, int tmRows, int tmCols, double targetMatrix);
 
 // todo Filipe
+// as of 07-07-2020, logic is coded but untested
 bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double partialMatrix, int tmRows, int tmCols, double ** targetMatrix);
     // takes a partial matrix and mirrors it to the remaining 3 quadrants. returns true if successful.
     // must adapt to various sizes
