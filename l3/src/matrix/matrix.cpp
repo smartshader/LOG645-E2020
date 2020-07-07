@@ -1,4 +1,14 @@
+#include <thread>
+#include <iostream>
+#include <chrono>
+
 #include "matrix.hpp"
+
+using namespace std::chrono;
+
+using std::cerr;
+using std::endl;
+using std::flush;
 
 double ** allocateMatrix(int rows, int cols) {
     double ** matrix = new double*[rows];
@@ -36,14 +46,33 @@ void debug_fillMatrixWithSeed(int rows, int cols, float seed, double ** matrix) 
     }
 }
 
-bool cloneMatValuesAtoB(int rows, int cols, double matrixA, int rowsB, int colsB, double ** matrixB){
+bool cloneMatValuesAtoB(int rows, int cols, double ** matrixA, double ** matrixB){
     // clones matrix values from A to B, returns true if successful, false if there's an error.
-
-    return true;
+	try{
+		for(int row = 0; row < rows; row++) {
+			for(int col = 0; col < cols; col++) {
+				cerr << "Row: " << row << "      Col: " << col << endl << flush;
+				
+				cerr << "Value: " << matrixA[row][col] << endl << flush;				
+				matrixB[row][col] = matrixA[row][col];
+			}
+		}	
+		return true;	
+	}
+	catch(...){
+		return false;
+	}
 }
 
-bool isMatEqual(int rowsA, int colsA, double ** matrixA, int rowsB, int colsB, double ** matrixB){
+bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB){
     // compares two matrixes and returns true is they have matching values, false if not.
+	for(int row =0; row < rows; row++){
+		for(int col=0; col < cols; col++){
+			if(matrixA[row][col] != matrixB[row][col]) {
+				return false;
+			}
+		}
+	}
     return true;
 }
 
@@ -67,14 +96,42 @@ double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** 
         partialMatrix[i] = new double[colsCalculated];
     }
     
+	
     // TODO fill it
 
     return partialMatrix;
 }
 
-bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double partialMatrix, int tmRows, int tmCols, double ** targetMatrix){
+bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double ** partialMatrix, int tmRows, int tmCols, double ** targetMatrix){
     // takes a partial matrix and mirrors it to the remaining 3 quadrants of the targetMatrix. returns true if successful.
     // must adapt to various sizes
+	if(tmRows <= pmRows * 2 || tmCols <= pmCols * 2){
+		return false;
+	}
+	for(int tmRow = 0; tmRow < tmRows; tmRow++) {
+		for(int tmCol = 0; tmCol < tmCols; tmCol++) {
+			if(tmRow == 0 ||  tmRow == tmRows - 1 || tmCol == 0 || tmCol == tmCols - 1){
+				targetMatrix[tmRow][tmCol] = 0;
+			}
+			else{
+				int pmRow, pmCol = 0;
+				if(tmRow > pmRows){
+					pmRow = tmRows - (tmRow + 2);
+				}
+				else{
+					pmRow = tmRow - 1;
+				}
+				
+				if(tmCol > pmCols){
+					pmCol = tmCols - (tmCol + 2);
+				}
+				else{
+					pmCol = tmCol - 1;
+				}
+				targetMatrix[tmRow][tmCol] = partialMatrix[pmRow][pmCol];
+			}
+		}
+	}
     return true;
 }
 
