@@ -1,5 +1,6 @@
 #include <thread>
 #include <iostream>
+#include <iomanip>
 #include <chrono>
 
 #include "matrix.hpp"
@@ -51,9 +52,9 @@ bool cloneMatValuesAtoB(int rows, int cols, double ** matrixA, double ** matrixB
 	try{
 		for(int row = 0; row < rows; row++) {
 			for(int col = 0; col < cols; col++) {
-				cerr << "Row: " << row << "      Col: " << col << endl << flush;
+				// cerr << "Row: " << row << "      Col: " << col << endl << flush;
 				
-				cerr << "Value: " << matrixA[row][col] << endl << flush;				
+				// cerr << "Value: " << matrixA[row][col] << endl << flush;				
 				matrixB[row][col] = matrixA[row][col];
 			}
 		}	
@@ -77,9 +78,8 @@ bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB){
 }
 
 // TODO howard
-double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** partialMatrix, int tmRows, int tmCols, double targetMatrix){
-    // allocate, initiazes and returns a partialMatrix. the partialMatrix's # number of rows and cols are set based on its targetMatrix
-    // must adapt to various sizes
+double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows, int tmCols, double targetMatrix){
+    // allocate, initiazes and returns a partialMatrix, its # number of rows and cols are set based on its targetMatrix
 
     // TODO
     // must calculate the correct rows/cols for partialMatrix
@@ -91,11 +91,8 @@ double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** 
     *pmCols = colsCalculated;
 
     // allocate it
-    double ** partialMatrix = new double*[rowsCalculated];
-    for(int i = 0; i < rowsCalculated; i++) {
-        partialMatrix[i] = new double[colsCalculated];
-    }
-    
+    double ** partialMatrix = allocateMatrix(*pmRows, *pmCols);
+
 	
     // TODO fill it
 

@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
     double ** tempSeqMatrix = NULL;
     double ** tempParMatrix = NULL;
 
-    // at the minimum, we need at least 5 arguments
+    // at the minimum, we need *at least* 5 arguments
     // ________________ MANDATORY (for submission)
     // 1: (int)    n - number of lines
     // 2: (int)    m - number of columns
@@ -89,39 +89,6 @@ int main(int argc, char* argv[]) {
         printInputArguments(argc, argv);
         initialMatrixDisplayOnly(rows, cols);
         runtime_seq = sequential(rows, cols, iters, td, h, sleep, tempSeqMatrix);
-
-        // compares two EQUAL matrixes
-        fillMatrix(rows, cols, tempSeqMatrix);
-        cout << "Matrix Seq (true test) : tempSeqMatrix" << endl << flush;
-        printMatrix(rows, cols, tempSeqMatrix);
-        fillMatrix(rows, cols, tempParMatrix);
-        cout << "Matrix Par (true test) : tempParMatrix" << endl << flush;
-        printMatrix(rows, cols, tempParMatrix);
-        // TODO : Filipe compare function here. please test different sizes. All results must return true as matching matrixes.
-		bool isEqual = isMatEqual(rows, cols, tempSeqMatrix, tempParMatrix);
-		if(isEqual == true){
-			printf("Matrix A and B are equal\n");		
-		}
-		else{
-			printf("Matrix A and B are different\n");			
-		}
-
-        // compares two NON-EQUAL matrixes
-        debug_fillMatrixWithSeed(rows, cols, 2.5, tempSeqMatrix);
-        cout << "Matrix Seq (false test) : tempSeqMatrix" << endl << flush;
-        printMatrix(rows, cols, tempSeqMatrix);
-        debug_fillMatrixWithSeed(rows, cols, 4.3, tempParMatrix);
-        cout << "Matrix Par (false test) : tempParMatrix" << endl << flush;
-        printMatrix(rows, cols, tempParMatrix);
-        // TODO : Filipe add compare matrix function here.
-		isEqual = isMatEqual(rows, cols, tempSeqMatrix, tempParMatrix);
-
-		if(isEqual == true){
-			printf("Matrix A and B are equal\n");		
-		}
-		else{
-			printf("Matrix A and B are different\n");			
-		}
     }
 
     // Ensure that no process will start computing early.
@@ -144,6 +111,8 @@ int main(int argc, char* argv[]) {
     }
     return EXIT_SUCCESS;
 }
+
+
 
 void invalidArguments() {
     cout << "Invalid arguments." << endl << flush;
@@ -177,8 +146,6 @@ long sequential(int rows, int cols, int iters, double td, double h, int sleep, d
     solveSeq(rows, cols, iters, td, h, sleep, matrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
-     // TODO Filipe : function copy matrix values to seqMatrix goes here
-	cloneMatValuesAtoB(rows, cols, matrix, tempSeqMatrix);
     cout << "----- SEQUENTIAL -----" << endl << flush;
     printMatrix(rows, cols, matrix);
 
@@ -194,9 +161,6 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, dou
     solvePar(rows, cols, iters, td, h, sleep, matrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
-    // TODO Filipe : function copy matrix values to parMatrix goes here
-	cloneMatValuesAtoB(rows, cols, matrix, tempParMatrix);
-	
     if(nullptr != *matrix) {
         cout << "-----  PARALLEL  -----" << endl << flush;
         printMatrix(rows, cols, matrix);
@@ -206,3 +170,4 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, dou
 
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 }
+
