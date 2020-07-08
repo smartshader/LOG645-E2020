@@ -7,7 +7,6 @@
 #include "solver.hpp"
 #include "../matrix/matrix.hpp"
 
-#define GREEN   "\033[32m"      /* Green */
 
 using std::memcpy;
 using std::this_thread::sleep_for;
@@ -20,10 +19,12 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
     
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    // generate partial matrix
     if(rank == 0) {
         partialMatrix = allocatePartialMatFromTargetMat(&pmRows, &pmCols, rows,cols,matrix);
     }
 
+    // todo choose between solvePar1cell1cpu solveParVirtualMat?
     
 
     if(rank != 0) {
@@ -62,5 +63,13 @@ void solveSeq(int rows, int cols, int iterations, double td, double h, int sleep
             memcpy(linePrevBuffer, lineCurrBuffer, cols * sizeof(double));
         }
     }
+}
+
+void solvePar1cell1cpu(){
+
+}
+
+void solveParVirtualMat(){
+
 }
 

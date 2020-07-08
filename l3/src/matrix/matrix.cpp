@@ -86,6 +86,7 @@ bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB){
 }
 
 // allocate, initiazes and returns a partialMatrix, its # number of rows and cols are set based on its targetMatrix
+// this function is called from solver.cpp
 double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows, int tmCols, double ** targetMatrix){
 	// set color output
 	cout << GREEN << "---------------------- allocatePartialMatFromTargetMat ---------------------" << endl << flush;
@@ -96,17 +97,17 @@ double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows
     int colsCalculated = 0;
 
 	if (tmRows % 2 == 0){
-		rowsCalculated = tmRows / 2;
+		rowsCalculated = tmRows / 2 - 2;
 	}
 	else{
-		rowsCalculated = (tmRows / 2) + 1;
+		rowsCalculated = (tmRows / 2) - 2 + 1;
 	}
 
 	if (tmCols % 2 == 0){
-		colsCalculated = tmCols / 2;
+		colsCalculated = tmCols / 2 - 2;
 	}
 	else{
-		colsCalculated = (tmCols / 2) + 1;
+		colsCalculated = (tmCols / 2) - 2 + 1;
 	}
 
     // assign it
@@ -160,6 +161,10 @@ bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double ** partialMatrix
 		}
 	}
     return true;
+}
+
+void restorePartialMatrix(){
+
 }
 
 

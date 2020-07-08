@@ -135,6 +135,7 @@ bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double partialMatrix, i
     // │ 0   0   0   0   0   0   0   0   0   0   0   0   0   0 │
     // └───────────────────────────────────────────────────────┘
 
-
+// restore the original partial matrix after calcs
+void restorePartialMatrix();
 
 #endif

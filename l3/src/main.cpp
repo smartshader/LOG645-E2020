@@ -96,6 +96,8 @@ int main(int argc, char* argv[]) {
     // Ensure that no process will start computing early.
     MPI_Barrier(MPI_COMM_WORLD);
 
+    // TODO howard : maybe partial matrix should be initialized here instead?
+
     runtime_par = parallel(rows, cols, iters, td, h, sleep, tempParMatrix);
 
     // _________________ FINAL RESULTS
@@ -158,6 +160,11 @@ long sequential(int rows, int cols, int iters, double td, double h, int sleep, d
 long parallel(int rows, int cols, int iters, double td, double h, int sleep, double ** tempParMatrix) {
     double ** matrix = allocateMatrix(rows, cols);
     fillMatrix(rows, cols, matrix);
+    // int pmRows, pmCols;
+    // double ** partialMatrix;
+
+    // partialMatrix = allocatePartialMatFromTargetMat(&pmRows, &pmCols, rows,cols,matrix);
+    // TODO Howard : maybe partial matrix should be generated here ?
 
     time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
     solvePar(rows, cols, iters, td, h, sleep, matrix);
@@ -167,7 +174,6 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, dou
         cout << "-----  PARALLEL  -----" << endl << flush;
         printMatrix(rows, cols, matrix);
         deallocateMatrix(rows, matrix);
-
     }
 
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
