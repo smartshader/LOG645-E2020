@@ -4,12 +4,19 @@
 #include <chrono>
 
 #include "matrix.hpp"
+#include "../output/output.hpp"
+
+#define MASTER_CPU 0
 
 using namespace std::chrono;
 
 using std::cerr;
 using std::endl;
 using std::flush;
+using std::cout;
+using std::fixed;
+using std::setprecision;
+using std::setw;
 
 double ** allocateMatrix(int rows, int cols) {
     double ** matrix = new double*[rows];
@@ -78,8 +85,10 @@ bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB){
 }
 
 // TODO howard
-double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows, int tmCols, double targetMatrix){
+double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows, int tmCols, double ** targetMatrix){
+	cout << "---------------------- allocatePartialMatFromTargetMat ---------------------" << endl << flush;
     // allocate, initiazes and returns a partialMatrix, its # number of rows and cols are set based on its targetMatrix
+
 
     // TODO
     // must calculate the correct rows/cols for partialMatrix
@@ -92,8 +101,10 @@ double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows
 
     // allocate it
     double ** partialMatrix = allocateMatrix(*pmRows, *pmCols);
-
 	
+	cout << "---------------------- received targetMatrix ---------------------" << endl << flush;
+	printMatrix(tmRows, tmCols, targetMatrix);
+
     // TODO fill it
 
     return partialMatrix;

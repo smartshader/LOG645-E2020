@@ -8,16 +8,23 @@
 #include "../matrix/matrix.hpp"
 
 using std::memcpy;
-
 using std::this_thread::sleep_for;
 using std::chrono::microseconds;
 
 
 void solvePar(int rows, int cols, int iterations, double td, double h, int sleep, double ** matrix) {
-    int rank;
+    int rank, pmRows, pmCols;
+    double ** partialMatrix;
+    
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if(0 != rank) {
+    if(rank == 0) {
+        partialMatrix = allocatePartialMatFromTargetMat(&pmRows, &pmCols, rows,cols,matrix);
+    }
+
+    
+
+    if(rank != 0) {
         deallocateMatrix(rows, matrix);
     }
 

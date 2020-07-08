@@ -18,8 +18,7 @@ bool cloneMatValuesAtoB(int rows, int cols, double ** matrixA, double ** matrixB
 // tested and functional
 bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB);
 
-// testing function for isMatEqual
-void debug_isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB);
+
 
 // todo Howard
     // EXAMPLE 1
@@ -48,7 +47,7 @@ void debug_isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB);
     // │ 12  16 │
     // └────────┘
 // allocate, initiazes and returns a partialMatrix, its # number of rows and cols are set based on its targetMatrix
-double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows, int tmCols, double targetMatrix);
+double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows, int tmCols, double ** targetMatrix);
 
 // todo Filipe
 // as of 07-07-2020, logic is coded but untested
