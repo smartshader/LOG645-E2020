@@ -34,6 +34,7 @@ int main(int argc, char* argv[]) {
     int iters;
     double td;
     double h;
+    bool debugMode;
 
     // MPI variables.
     int mpi_status;
@@ -78,6 +79,7 @@ int main(int argc, char* argv[]) {
     iters = stoi(argv[3], nullptr, 10);
     td = stod(argv[4], nullptr);
     h = stod(argv[5], nullptr);
+    debugMode = stod(argv[6], nullptr);
 
     // matrix placeholders for comparison
     tempSeqMatrix = allocateMatrix(rows, cols);
@@ -112,7 +114,7 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
 }
 
-
+// =======================================================================================
 
 void invalidArguments() {
     cout << "Invalid arguments." << endl << flush;
