@@ -6,7 +6,8 @@
 #include "matrix.hpp"
 #include "../output/output.hpp"
 
-#define MASTER_CPU 0
+#define GREEN   "\033[32m"      /* Green */
+#define RESET   "\033[0m"
 
 using namespace std::chrono;
 
@@ -84,20 +85,36 @@ bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB){
     return true;
 }
 
-// TODO howard
+// allocate, initiazes and returns a partialMatrix, its # number of rows and cols are set based on its targetMatrix
 double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows, int tmCols, double ** targetMatrix){
-	cout << "---------------------- allocatePartialMatFromTargetMat ---------------------" << endl << flush;
-    // allocate, initiazes and returns a partialMatrix, its # number of rows and cols are set based on its targetMatrix
-
+	// set color output
+	cout << GREEN << "---------------------- allocatePartialMatFromTargetMat ---------------------" << endl << flush;
 
     // TODO
     // must calculate the correct rows/cols for partialMatrix
     int rowsCalculated = 0;
     int colsCalculated = 0;
 
+	if (tmRows % 2 == 0){
+		rowsCalculated = tmRows / 2;
+	}
+	else{
+		rowsCalculated = (tmRows / 2) + 1;
+	}
+
+	if (tmCols % 2 == 0){
+		colsCalculated = tmCols / 2;
+	}
+	else{
+		colsCalculated = (tmCols / 2) + 1;
+	}
+
     // assign it
     *pmRows = rowsCalculated;
     *pmCols = colsCalculated;
+
+	cout << "pmRows: " << *pmRows << " pmCols: " << *pmCols << endl << flush;
+	cout << "tmRows: " << tmRows << " tmCols: " << tmCols << " (includes borders 0)" << endl << flush;
 
     // allocate it
     double ** partialMatrix = allocateMatrix(*pmRows, *pmCols);
@@ -107,6 +124,8 @@ double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows
 
     // TODO fill it
 
+	// end color output
+	cout << RESET << endl << flush;
     return partialMatrix;
 }
 

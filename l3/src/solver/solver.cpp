@@ -7,6 +7,8 @@
 #include "solver.hpp"
 #include "../matrix/matrix.hpp"
 
+#define GREEN   "\033[32m"      /* Green */
+
 using std::memcpy;
 using std::this_thread::sleep_for;
 using std::chrono::microseconds;
