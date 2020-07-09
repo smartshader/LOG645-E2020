@@ -16,12 +16,15 @@ using std::chrono::microseconds;
 void solvePar(int rows, int cols, int iterations, double td, double h, int sleep, double ** matrix) {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
+/*
     if(0 != rank) {
         deallocateMatrix(rows, matrix);
     }
 
     sleep_for(microseconds(500000));
+	
+*/	
+	oneCellOneCPU(rows,cols, iterations, td, h, sleep, rows * cols, matrix);
 }
 
 void solveSeq(int rows, int cols, int iterations, double td, double h, int sleep, double ** matrix) {
@@ -55,3 +58,40 @@ void solveSeq(int rows, int cols, int iterations, double td, double h, int sleep
     }
 }
 
+void oneCellOneCPU(int rows, int cols, int iterations, double td, double h, int sleep, int nbCells, double ** matrix) {
+	
+	/*
+	Faire iteration comme exterieur.
+	
+	Appel MPI_Scatter de copie de matrix
+	Recuperer valeurs de copie de matrix (valeurs precedentes) qui sont top, left, right et bottom, puis calculer champ
+	Attendre tous pour fin calcul, puis MPI_Gatter sur copie matrice
+	Faire copie de nouvelle matrice.
+	
+	*/
+    
+	int subMatrix[1][1] {};
+	
+	int scatterStatus = MPI_Scatter(&matrix,
+                                    1,
+                                    MPI_DOUBLE,
+                                    &subMatrix,
+                                    1,
+                                    MPI_DOUBLE,
+                                    0,
+                                    MPI_COMM_WORLD);
+									
+    if (scatterStatus != MPI_SUCCESS)
+    {
+        printf("[Error] MPI_Scatter\n");
+        return;
+    }									
+
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	
+	for(int k = 0; k < iterations; k++) {
+		
+	}
+	
+}
