@@ -68,29 +68,40 @@ void oneCellOneCPU(int rows, int cols, int iterations, double td, double h, int 
 	Attendre tous pour fin calcul, puis MPI_Gatter sur copie matrice
 	Faire copie de nouvelle matrice.
 	
+	Position i = rank % total nb rows
+	Position j = tank / total nb rows
+	
 	*/
-    
 	int subMatrix[1][1] {};
 	
-	int scatterStatus = MPI_Scatter(&matrix,
-                                    1,
-                                    MPI_DOUBLE,
-                                    &subMatrix,
-                                    1,
-                                    MPI_DOUBLE,
-                                    0,
-                                    MPI_COMM_WORLD);
-									
-    if (scatterStatus != MPI_SUCCESS)
-    {
-        printf("[Error] MPI_Scatter\n");
-        return;
-    }									
-
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	int rank;	
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	
+	int rankPosI = rank % rows;
+	int rankPosJ = rank / rows;
+	
+	int rankTop = ((rankPosJ - 1) * rows) + rankPosI;
+	int rankBottom = ((rankPosJ + 1) * rows) + rankPosI;
+	int rankLeft = (rankPosJ * rows) + rankPosI - 1;
+	int rankRight = (rankPosJ * rows) + rankPosI + 1;
 	
 	for(int k = 0; k < iterations; k++) {
+		
+		int scatterStatus = MPI_Scatter(&matrix,
+										1,
+										MPI_DOUBLE,
+										&subMatrix,
+										1,
+										MPI_DOUBLE,
+										0,
+										MPI_COMM_WORLD);
+										
+		if (scatterStatus != MPI_SUCCESS)
+		{
+			printf("[Error] MPI_Scatter\n");
+			return;
+		}									
+		
 		
 	}
 	
