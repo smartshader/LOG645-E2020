@@ -71,19 +71,21 @@ void oneCellOneCPU(int rows, int cols, int iterations, double td, double h, int 
 	Position i = rank % total nb rows
 	Position j = tank / total nb rows
 	
-	*/
-	int subMatrix[1][1] {};
+	int rankTop = ((rankPosJ - 1) * rows) + rankPosI;
+	int rankBottom = ((rankPosJ + 1) * rows) + rankPosI;
+	int rankLeft = (rankPosJ * rows) + rankPosI - 1;
+	int rankRight = (rankPosJ * rows) + rankPosI + 1;	
 	
+	*/
+	
+	double subMatrix[1][1] {};
+    double c, l, r, t, b;	
 	int rank;	
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	
 	int rankPosI = rank % rows;
 	int rankPosJ = rank / rows;
-	
-	int rankTop = ((rankPosJ - 1) * rows) + rankPosI;
-	int rankBottom = ((rankPosJ + 1) * rows) + rankPosI;
-	int rankLeft = (rankPosJ * rows) + rankPosI - 1;
-	int rankRight = (rankPosJ * rows) + rankPosI + 1;
+	double h_square = h * h;	
 	
 	for(int k = 0; k < iterations; k++) {
 		
@@ -102,7 +104,40 @@ void oneCellOneCPU(int rows, int cols, int iterations, double td, double h, int 
 			return;
 		}									
 		
+		c = matrix[rankPosI][rankPosJ];
 		
+		if (rankPosI - 1 >= 0) {
+			t = matrix[rankPosI - 1][rankPosJ];
+		}else{
+			t = 0;
+		}
+		if (rankPosI + 1 <= rows) {
+			b = matrix[rankPosI + 1][rankPosJ];
+		}else{
+			b = 0;
+		}		
+		if (rankPosJ - 1 >= 0) {
+			l = matrix[rankPosI][rankPosJ - 1];
+		}else{
+			l = 0;
+		}
+		if (rankPosJ + 1 < cols) {
+			r = matrix[rankPosI][rankPosJ + 1];
+		}else{
+			r = 0;
+		}
+		
+		sleep_for(microseconds(sleep));
+        subMatrix[0][0] = c * (1.0 - 4.0 * td / h_square) + (t + b + l + r) * (td / h_square);		
+		
+	    MPI_Gather(&subMatrix,
+				   1,
+				   MPI_DOUBLE,
+				   &matrix,
+				   1,
+				   MPI_DOUBLE,
+				   0,
+				   MPI_COMM_WORLD);	
 	}
 	
 }
