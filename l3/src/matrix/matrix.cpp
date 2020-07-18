@@ -89,40 +89,24 @@ bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB){
 // allocate, initiazes and returns a partialMatrix, its # number of rows and cols are set based on its targetMatrix
 // this function is called from solver.cpp
 double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows, int tmCols, double ** targetMatrix){
-	// set color output
-	cout << GREEN << "---------------------- allocatePartialMatFromTargetMat ---------------------" << endl << flush;
-
-    // assign it
-    *pmRows = calculatedLenPartialMat(tmRows);
-    *pmCols = calculatedLenPartialMat(tmCols);;
-
-	// cout << "pmRows: " << *pmRows << " pmCols: " << *pmCols << endl << flush;
-	// cout << "tmRows: " << tmRows << " tmCols: " << tmCols << " (includes borders 0)" << endl << flush;
+	
+    // determine appropriate partialMatrix lengths
+    *pmRows = tmRows/2 - ((tmRows % 2 == 0) ? 1 : 0);
+    *pmCols = tmCols/2 - ((tmCols % 2 == 0) ? 1 : 0);
 
     // allocate it
     double ** partialMatrix = allocateMatrix(*pmRows, *pmCols);
-	
-	// cout << "---------------------- received targetMatrix ---------------------" << endl << flush;
-	// printMatrix(tmRows, tmCols, targetMatrix);
 
-    // TODO fill our partial matrix
+    // fill our partial matrix
 	for (int currentTargetRow = 1; currentTargetRow <= *pmRows; currentTargetRow++){
 		for (int currentTargetCol = 1; currentTargetCol <= *pmCols; currentTargetCol++){
 			partialMatrix[currentTargetRow - 1][currentTargetCol - 1] = targetMatrix[currentTargetRow][currentTargetCol];
 		}
 	}
 
-	// cout << "---------------------- extracted partialMatrix ---------------------" << endl << flush;
-	// printMatrix(*pmRows, *pmCols, partialMatrix);
-
-	// end color output
-	cout << RESET << endl << flush;
     return partialMatrix;
 }
 
-int calculatedLenPartialMat(int lengthOfTargetMatrix){
-	return lengthOfTargetMatrix/2 - ((lengthOfTargetMatrix % 2 == 0) ? 1 : 0);
-}
 
 bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double ** partialMatrix, int tmRows, int tmCols, double ** targetMatrix){
     // takes a partial matrix and mirrors it to the remaining 3 quadrants of the targetMatrix. returns true if successful.
