@@ -18,7 +18,8 @@
         "random": "c",
         "limits": "c",
         "locale": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "iomanip": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

@@ -1,0 +1,15 @@
+    // color color outputs
+    #define GREEN   "\033[32m"      /* Green */
+    #define RESET   "\033[0m"
+    
+    // set color output
+    cout << GREEN << "---------------------- allocatePartialMatFromTargetMat ---------------------" << endl << flush;
+
+	cout << "---------------------- extracted partialMatrix ---------------------" << endl << flush;
+    printMatrix(*pmRows, *pmCols, partialMatrix);
+
+    // end color output
+    cout << RESET << endl << flush;
+
+    =================================================================================
+    =================================================================================

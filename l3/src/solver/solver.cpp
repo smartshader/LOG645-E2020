@@ -1,20 +1,36 @@
 #include <chrono>
 #include <cstring>
 #include <thread>
+#include <iomanip>
+#include <iostream>
+#include <chrono>
 
 #include <mpi.h>
 
 #include "solver.hpp"
 #include "../matrix/matrix.hpp"
 
-using std::memcpy;
+#define GREEN   "\033[32m"      /* Green */
+#define RESET   "\033[0m"
 
+using std::cout;
+using std::endl;
+using std::fixed;
+using std::flush;
+using std::setprecision;
+using std::setw;
+
+using std::memcpy;
 using std::this_thread::sleep_for;
 using std::chrono::microseconds;
 
-
+// Howard : seems like this is called for every CPU.
 void solvePar(int rows, int cols, int iterations, double td, double h, int sleep, double ** matrix) {
-    int rank;
+    int rank, pmRows, pmCols;
+    double ** partialMatrix;
+	// set color output
+    cout << GREEN << "---------------------- solvePar called ---------------------" << endl << flush;
+    
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 /*
     if(0 != rank) {
@@ -25,6 +41,8 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
 	
 */	
 	oneCellOneCPU(rows,cols, iterations, td, h, sleep, rows * cols, matrix);
+	// end color output
+    cout << RESET << endl << flush;
 }
 
 void solveSeq(int rows, int cols, int iterations, double td, double h, int sleep, double ** matrix) {

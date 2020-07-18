@@ -7,7 +7,7 @@
     # 2: (int)    m - number of columns
     # 3: (int)    tp - number of timesteps/iterations
     # 4: (double) td - discretized time
-    # 5: (float)  h - size of each tile subdivison (square hxh)
+    # 5: (float)  h - size of each tile subdivison (square h x h)
     #
     # ________________ OPTIONAL (used for dev purposes)
     # 6: (bool) enable/disables matrix output
@@ -15,8 +15,36 @@
 make all
 echo ""
 echo "<<<"
-mpirun -np 2 ./lab3 7 10 300 0.01 1 9 9
+mpirun -np 4 ./lab3 7 10 300 0.01 1 9
 echo ">>>"
+
+echo ""
+echo "<<<"
+mpirun -np 4 ./lab3 5 9 300 0.01 1 9
+echo ">>>"
+
+
+
+echo ""
+echo "<<<"
+mpirun -np 4 ./lab3 10 10 300 0.01 1 9
+echo ">>>"
+
+echo ""
+echo "<<<"
+mpirun -np 4 ./lab3 12 12 300 0.01 1 9
+echo ">>>"
+
+echo ""
+echo "<<<"
+mpirun -np 4 ./lab3 11 11 300 0.01 1 9
+echo ">>>"
+
+echo ""
+echo "<<<"
+mpirun -np 4 ./lab3 4 11 300 0.01 1 9
+echo ">>>"
+
 make clean
 
 
