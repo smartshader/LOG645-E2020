@@ -12,6 +12,7 @@
 
 #define GREEN   "\033[32m"      /* Green */
 #define RESET   "\033[0m"
+#define MASTER_CPU 0
 
 using std::cout;
 using std::endl;

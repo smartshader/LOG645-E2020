@@ -9,6 +9,8 @@
 #include "output/output.hpp"
 #include "solver/solver.hpp"
 
+#define MASTER_CPU 0
+
 void invalidArguments();
 
 void printInputArguments(int argc, char* argv[]);
@@ -36,9 +38,7 @@ int main(int argc, char* argv[]) {
     double h;
     bool debugMode;
 
-    // MPI variables.
-    int mpi_status;
-    int rank;
+
 
     // Resolution variables.
     // Sleep will be in microseconds during execution.
@@ -67,13 +67,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    mpi_status = MPI_Init(&argc, &argv);
-    
-    if(MPI_SUCCESS != mpi_status) {
-        cout << "MPI initialization failure." << endl << flush;
-        return EXIT_FAILURE;
-    }
-
+    // initialize arguments
     rows = stoi(argv[1], nullptr, 10);
     cols = stoi(argv[2], nullptr, 10);
     iters = stoi(argv[3], nullptr, 10);
@@ -84,10 +78,27 @@ int main(int argc, char* argv[]) {
     // matrix placeholders for comparison
     tempSeqMatrix = allocateMatrix(rows, cols);
     tempParMatrix = allocateMatrix(rows,cols);
-    
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if(0 == rank) {
+    // ==================== INITIALIZE PARALLEL ENVIRONMENT ===================
+
+    // create an instance of MPI World
+    int mpi_status;
+    mpi_status = MPI_Init(&argc, &argv);
+    
+    if(MPI_SUCCESS != mpi_status) {
+        cout << "MPI initialization failure." << endl << flush;
+        return EXIT_FAILURE;
+    }
+
+    // get the number of processes within instanced MPI world
+    int instanceSize;
+    MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
+    // get the current rank of CPU
+    int cpuRank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &cpuRank);
+
+    // ___________________________________________________ Sequential
+    if(MASTER_CPU == cpuRank) {
         printInputArguments(argc, argv);
         initialMatrixDisplayOnly(rows, cols);
         runtime_seq = sequential(rows, cols, iters, td, h, sleep, tempSeqMatrix);
@@ -96,23 +107,30 @@ int main(int argc, char* argv[]) {
     // Ensure that no process will start computing early.
     MPI_Barrier(MPI_COMM_WORLD);
 
-    // TODO howard : maybe partial matrix should be initialized here instead?
 
+    // TODO howard : maybe partial matrix should be initialized here instead?
+    // ___________________________________________________ Parallel
     runtime_par = parallel(rows, cols, iters, td, h, sleep, tempParMatrix);
 
-    // _________________ FINAL RESULTS
-    if(0 == rank) {
-        printStatistics(1, runtime_seq, runtime_par);
 
+
+    // ___________________________________________________ RESULTS
+    if(MASTER_CPU == cpuRank) {
+        printStatistics(1, runtime_seq, runtime_par);
         deallocateMatrix(rows, tempSeqMatrix);
         deallocateMatrix(rows, tempParMatrix);
     }
 
+
+
+    // ==================== END PARALLEL PROCESSING ===================
     mpi_status = MPI_Finalize();
+
     if(MPI_SUCCESS != mpi_status) {
         cout << "Execution finalization terminated in error." << endl << flush;
         return EXIT_FAILURE;
     }
+
     return EXIT_SUCCESS;
 }
 
@@ -178,4 +196,6 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, dou
 
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 }
+
+
 
