@@ -6,6 +6,7 @@
 #include "matrix.hpp"
 #include "../output/output.hpp"
 
+// color color outputs
 #define GREEN   "\033[32m"      /* Green */
 #define RESET   "\033[0m"
 
@@ -91,28 +92,9 @@ double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows
 	// set color output
 	cout << GREEN << "---------------------- allocatePartialMatFromTargetMat ---------------------" << endl << flush;
 
-    // TODO
-    // must calculate the correct rows/cols for partialMatrix
-    int rowsCalculated = 0;
-    int colsCalculated = 0;
-
-	if (tmRows % 2 == 0){
-		rowsCalculated = tmRows / 2 - 2;
-	}
-	else{
-		rowsCalculated = (tmRows / 2) - 2 + 1;
-	}
-
-	if (tmCols % 2 == 0){
-		colsCalculated = tmCols / 2 - 2;
-	}
-	else{
-		colsCalculated = (tmCols / 2) - 2 + 1;
-	}
-
     // assign it
-    *pmRows = rowsCalculated;
-    *pmCols = colsCalculated;
+    *pmRows = calculatedLenPartialMat(tmRows);
+    *pmCols = calculatedLenPartialMat(tmCols);;
 
 	cout << "pmRows: " << *pmRows << " pmCols: " << *pmCols << endl << flush;
 	cout << "tmRows: " << tmRows << " tmCols: " << tmCols << " (includes borders 0)" << endl << flush;
@@ -128,6 +110,10 @@ double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows
 	// end color output
 	cout << RESET << endl << flush;
     return partialMatrix;
+}
+
+int calculatedLenPartialMat(int lengthOfTargetMatrix){
+	return lengthOfTargetMatrix/2 - ((lengthOfTargetMatrix % 2 == 0) ? 1 : 0);
 }
 
 bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double ** partialMatrix, int tmRows, int tmCols, double ** targetMatrix){
