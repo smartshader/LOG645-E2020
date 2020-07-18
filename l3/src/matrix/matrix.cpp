@@ -96,16 +96,24 @@ double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows
     *pmRows = calculatedLenPartialMat(tmRows);
     *pmCols = calculatedLenPartialMat(tmCols);;
 
-	cout << "pmRows: " << *pmRows << " pmCols: " << *pmCols << endl << flush;
-	cout << "tmRows: " << tmRows << " tmCols: " << tmCols << " (includes borders 0)" << endl << flush;
+	// cout << "pmRows: " << *pmRows << " pmCols: " << *pmCols << endl << flush;
+	// cout << "tmRows: " << tmRows << " tmCols: " << tmCols << " (includes borders 0)" << endl << flush;
 
     // allocate it
     double ** partialMatrix = allocateMatrix(*pmRows, *pmCols);
 	
-	cout << "---------------------- received targetMatrix ---------------------" << endl << flush;
-	printMatrix(tmRows, tmCols, targetMatrix);
+	// cout << "---------------------- received targetMatrix ---------------------" << endl << flush;
+	// printMatrix(tmRows, tmCols, targetMatrix);
 
-    // TODO fill it
+    // TODO fill our partial matrix
+	for (int currentTargetRow = 1; currentTargetRow <= *pmRows; currentTargetRow++){
+		for (int currentTargetCol = 1; currentTargetCol <= *pmCols; currentTargetCol++){
+			partialMatrix[currentTargetRow - 1][currentTargetCol - 1] = targetMatrix[currentTargetRow][currentTargetCol];
+		}
+	}
+
+	// cout << "---------------------- extracted partialMatrix ---------------------" << endl << flush;
+	// printMatrix(*pmRows, *pmCols, partialMatrix);
 
 	// end color output
 	cout << RESET << endl << flush;
