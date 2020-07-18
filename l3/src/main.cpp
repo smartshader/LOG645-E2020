@@ -109,6 +109,10 @@ int main(int argc, char* argv[]) {
     // ___________________________________________________ RESULTS
     if(MASTER_CPU == cpuRank) {
         // TODO Better to print matrix here
+        cout << "----- SEQUENTIAL RES -----" << endl << flush;
+        printMatrix(rows, cols, tempSeqMatrix);
+        cout << "-----  PARALLEL RES -----" << endl << flush;
+        printMatrix(rows, cols, tempParMatrix);
         printStatistics(1, runtime_seq, runtime_par);
         // only need a single row to deallocate everything
         deallocateMatrix(rows, tempSeqMatrix);
@@ -152,10 +156,7 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, dou
 
         // TODO mirror partialMatrix to targetMatrix
 
-        cout << "-----  PARALLEL RES -----" << endl << flush;
-
-        // TODO : copy targetMatrix results to tempParMatrix
-        printMatrix(rows, cols, targetMatrix);
+        cloneMatValuesAtoB(rows, cols, targetMatrix, tempParMatrix);
         deallocateMatrix(rows, targetMatrix);
         deallocateMatrix(pmRows, partialMatrix);
     }
@@ -180,9 +181,7 @@ long sequential(int rows, int cols, int iters, double td, double h, int sleep, d
     solveSeq(rows, cols, iters, td, h, sleep, targetMatrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
-    cout << "----- SEQUENTIAL RES -----" << endl << flush;
-    // TODO : copy matrix results
-    printMatrix(rows, cols, targetMatrix);
+    cloneMatValuesAtoB(rows, cols, targetMatrix, tempSeqMatrix);
     deallocateMatrix(rows, targetMatrix);
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 }
