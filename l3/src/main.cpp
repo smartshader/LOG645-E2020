@@ -108,6 +108,7 @@ int main(int argc, char* argv[]) {
 
     // ___________________________________________________ RESULTS
     if(MASTER_CPU == cpuRank) {
+        // TODO Better to print matrix here
         printStatistics(1, runtime_seq, runtime_par);
         // only need a single row to deallocate everything
         deallocateMatrix(rows, tempSeqMatrix);
@@ -128,7 +129,6 @@ int main(int argc, char* argv[]) {
 
 
 long parallel(int rows, int cols, int iters, double td, double h, int sleep, double ** tempParMatrix) {
-    // partialMatrix dimensions
     int pmRows, pmCols;
 
     double ** targetMatrix = NULL;
@@ -136,20 +136,22 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, dou
 
     targetMatrix = allocateMatrix(rows, cols);
     fillMatrix(rows, cols, targetMatrix);
+    
     partialMatrix = allocatePartialMatFromTargetMat(&pmRows, &pmCols, rows, cols, targetMatrix);
 
     time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
-    // partialMatrix injection should be here...
-    solvePar(rows, cols, iters, td, h, sleep, targetMatrix);
+    solvePar(pmRows, pmCols, iters, td, h, sleep, partialMatrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
 
     // recall that solvePar deallocates everything except the MASTER_CPU
     // only our MASTER_CPU (Rank 0) will output the final result
-    if(*targetMatrix != nullptr) {
+    if(*partialMatrix != nullptr) {
         cout << YELLOW << "---------------------- partialMatrix -------- " << RESET << endl << flush;
         printMatrix(pmRows, pmCols, partialMatrix);
-        
+
+        // TODO mirror partialMatrix to targetMatrix
+
         cout << "-----  PARALLEL RES -----" << endl << flush;
 
         // TODO : copy targetMatrix results to tempParMatrix

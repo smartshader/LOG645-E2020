@@ -37,6 +37,12 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
 	cout << GREEN << "---------------------- solvePar called ----Rank:["<< cpuRank <<"/"<< instanceSize <<"] " << RESET << endl << flush;
     printMatrix(rows, cols, matrix);
 
+	if (instanceSize <= rows*cols){
+		// oneCellOneCPU(rows,cols, iterations, td, h, sleep, rows * cols, matrix);
+	}else{
+		// batch processing
+	}
+
 	// after each CPU processing that is not MASTER, deallocate it
 	if(cpuRank != MASTER_CPU) {
 		deallocateMatrix(rows, matrix);
@@ -45,7 +51,7 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
 	sleep_for(microseconds(500000));
 		
 
-	//oneCellOneCPU(rows,cols, iterations, td, h, sleep, rows * cols, matrix);
+	
 }
 
 
