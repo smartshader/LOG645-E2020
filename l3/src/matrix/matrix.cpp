@@ -1,14 +1,24 @@
 #include <thread>
 #include <iostream>
+#include <iomanip>
 #include <chrono>
 
 #include "matrix.hpp"
+#include "../output/output.hpp"
+
+// color color outputs
+#define GREEN   "\033[32m"      /* Green */
+#define RESET   "\033[0m"
 
 using namespace std::chrono;
 
 using std::cerr;
 using std::endl;
 using std::flush;
+using std::cout;
+using std::fixed;
+using std::setprecision;
+using std::setw;
 
 double ** allocateMatrix(int rows, int cols) {
     double ** matrix = new double*[rows];
@@ -51,9 +61,9 @@ bool cloneMatValuesAtoB(int rows, int cols, double ** matrixA, double ** matrixB
 	try{
 		for(int row = 0; row < rows; row++) {
 			for(int col = 0; col < cols; col++) {
-				cerr << "Row: " << row << "      Col: " << col << endl << flush;
+				// cerr << "Row: " << row << "      Col: " << col << endl << flush;
 				
-				cerr << "Value: " << matrixA[row][col] << endl << flush;				
+				// cerr << "Value: " << matrixA[row][col] << endl << flush;				
 				matrixB[row][col] = matrixA[row][col];
 			}
 		}	
@@ -76,31 +86,27 @@ bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB){
     return true;
 }
 
-// TODO howard
-double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** partialMatrix, int tmRows, int tmCols, double targetMatrix){
-    // allocate, initiazes and returns a partialMatrix. the partialMatrix's # number of rows and cols are set based on its targetMatrix
-    // must adapt to various sizes
-
-    // TODO
-    // must calculate the correct rows/cols for partialMatrix
-    int rowsCalculated = 0;
-    int colsCalculated = 0;
-
-    // assign it
-    *pmRows = rowsCalculated;
-    *pmCols = colsCalculated;
+// allocate, initiazes and returns a partialMatrix, its # number of rows and cols are set based on its targetMatrix
+// this function is called from solver.cpp
+double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows, int tmCols, double ** targetMatrix){
+	
+    // determine appropriate partialMatrix lengths
+    *pmRows = tmRows/2 - ((tmRows % 2 == 0) ? 1 : 0);
+    *pmCols = tmCols/2 - ((tmCols % 2 == 0) ? 1 : 0);
 
     // allocate it
-    double ** partialMatrix = new double*[rowsCalculated];
-    for(int i = 0; i < rowsCalculated; i++) {
-        partialMatrix[i] = new double[colsCalculated];
-    }
-    
-	
-    // TODO fill it
+    double ** partialMatrix = allocateMatrix(*pmRows, *pmCols);
+
+    // fill our partial matrix
+	for (int currentTargetRow = 1; currentTargetRow <= *pmRows; currentTargetRow++){
+		for (int currentTargetCol = 1; currentTargetCol <= *pmCols; currentTargetCol++){
+			partialMatrix[currentTargetRow - 1][currentTargetCol - 1] = targetMatrix[currentTargetRow][currentTargetCol];
+		}
+	}
 
     return partialMatrix;
 }
+
 
 bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double ** partialMatrix, int tmRows, int tmCols, double ** targetMatrix){
     // takes a partial matrix and mirrors it to the remaining 3 quadrants of the targetMatrix. returns true if successful.
@@ -133,6 +139,10 @@ bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double ** partialMatrix
 		}
 	}
     return true;
+}
+
+void restorePartialMatrix(){
+
 }
 
 
