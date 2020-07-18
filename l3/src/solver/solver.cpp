@@ -38,14 +38,13 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
 	cout << GREEN << "---------------------- solvePar called ----Rank:["<< cpuRank <<"/"<< instanceSize <<"] " << RESET << endl << flush;
     printMatrix(rows, cols, matrix);
 
-	/*
-		if(0 != cpuRank) {
-			deallocateMatrix(rows, matrix);
-		}
+	// after each row CPU processing, deallocate it
+	if(0 != cpuRank) {
+		deallocateMatrix(rows, matrix);
+	}
 
-		sleep_for(microseconds(500000));
+	sleep_for(microseconds(500000));
 		
-	*/	
 
 	//oneCellOneCPU(rows,cols, iterations, td, h, sleep, rows * cols, matrix);
 }

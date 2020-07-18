@@ -23,28 +23,6 @@ echo "<<<"
 mpirun -np 4 ./lab3 5 9 300 0.01 1 9
 echo ">>>"
 
-
-
-echo ""
-echo "<<<"
-mpirun -np 4 ./lab3 10 10 300 0.01 1 9
-echo ">>>"
-
-echo ""
-echo "<<<"
-mpirun -np 4 ./lab3 12 12 300 0.01 1 9
-echo ">>>"
-
-echo ""
-echo "<<<"
-mpirun -np 4 ./lab3 11 11 300 0.01 1 9
-echo ">>>"
-
-echo ""
-echo "<<<"
-mpirun -np 4 ./lab3 4 11 300 0.01 1 9
-echo ">>>"
-
 make clean
 
 

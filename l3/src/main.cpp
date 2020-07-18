@@ -106,8 +106,6 @@ int main(int argc, char* argv[]) {
     // ___________________________________________________ Parallel
     runtime_par = parallel(rows, cols, iters, td, h, sleep, tempParMatrix);
 
-
-
     // ___________________________________________________ RESULTS
     if(MASTER_CPU == cpuRank) {
         printStatistics(1, runtime_seq, runtime_par);
@@ -134,42 +132,26 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, dou
     int pmRows, pmCols;
 
     double ** targetMatrix = NULL;
-    double ** partialMatrix = NULL;
-
-    // get the number of processes within instanced MPI world
-    int instanceSize;
-    MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
-    // get the current rank of CPU
-    int cpuRank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &cpuRank);
+    // double ** partialMatrix = NULL;
 
     targetMatrix = allocateMatrix(rows, cols);
     fillMatrix(rows, cols, targetMatrix);
-    partialMatrix = allocatePartialMatFromTargetMat(&pmRows, &pmCols, rows, cols, targetMatrix);
-
-    // ___________________________________________________ Setup
-    if(MASTER_CPU == cpuRank) {
-
-        // generate our partialMatrix
-        // cout << YELLOW << "---------------------- Preparing partialMatrix -------- " << RESET << endl << flush;
-        //printMatrix(pmRows, pmCols, partialMatrix);
-    
-    }
+    // partialMatrix = allocatePartialMatFromTargetMat(&pmRows, &pmCols, rows, cols, targetMatrix);
 
     time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
     // partialMatrix injection should be here...
-    //solvePar(pmRows, pmCols, iters, td, h, sleep, partialMatrix);
+    solvePar(rows, cols, iters, td, h, sleep, targetMatrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
 
     if(*targetMatrix != nullptr) {
         cout << "-----  PARALLEL RES -----" << endl << flush;
-        cout << YELLOW << "---------------------- partialMatrix -------- " << RESET << endl << flush;
-         printMatrix(pmRows, pmCols, partialMatrix);
+        // cout << YELLOW << "---------------------- partialMatrix -------- " << RESET << endl << flush;
+        //  printMatrix(pmRows, pmCols, partialMatrix);
         // TODO : copy matrix results
         printMatrix(rows, cols, targetMatrix);
         deallocateMatrix(rows, targetMatrix);
-        deallocateMatrix(rows, partialMatrix);
+        // deallocateMatrix(rows, partialMatrix);
     }
 
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
