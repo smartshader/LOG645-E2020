@@ -11,40 +11,15 @@ void fillMatrix(int rows, int cols, double ** matrix);
 // for dev/test purposes. same as fillMatrix but with a seed number vary values
 void debug_fillMatrixWithSeed(int rows, int cols, float seed, double ** matrix);
 
+// TODO : pending. Might not need this in the end.
 // coded but when testing, doesn't work with the parallel matrix
 bool cloneMatValuesAtoB(int rows, int cols, double ** matrixA, double ** matrixB);
 
-// tested and function
+// tested and functional
 bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB);
 
-// todo Howard
-    // EXAMPLE 1
-    // ┌─────────────┐
-    // │ 0 0 0 0 0 0 │
-    // │ 0 1 2 2 1 0 │
-    // │ 0 3 4 4 3 0 │
-    // │ 0 3 4 4 3 0 │
-    // │ 0 1 2 2 1 0 │
-    // │ 0 0 0 0 0 0 │
-    // └─────────────┘
-    // ┌─────┐
-    // │ 1 2 │
-    // │ 3 4 │
-    // └─────┘
-    // EXAMPLE 2
-    // ┌───────────────────┐
-    // │ 0   0   0   0   0 │
-    // │ 0   9  12   9   0 │
-    // │ 0  12  16  12   0 │
-    // │ 0   9  12   9   0 │
-    // │ 0   0   0   0   0 │
-    // └───────────────────┘
-    // ┌────────┐
-    // │  9  12 │
-    // │ 12  16 │
-    // └────────┘
-// from a targetMatrix, extract a partialMatrix
-double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, double ** partialMatrix, int tmRows, int tmCols, double targetMatrix);
+// allocate, initiazes and returns a partialMatrix, its # number of rows and cols are set based on its targetMatrix
+double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows, int tmCols, double ** targetMatrix);
 
 // todo Filipe
 // as of 07-07-2020, logic is coded but untested
@@ -132,6 +107,7 @@ bool mirrorPartialMatToTargetMat(int pmRows, int pmCols, double partialMatrix, i
     // │ 0   0   0   0   0   0   0   0   0   0   0   0   0   0 │
     // └───────────────────────────────────────────────────────┘
 
-
+// restore the original partial matrix after calcs
+void restorePartialMatrix();
 
 #endif

@@ -7,17 +7,27 @@
 #include "solver.hpp"
 #include "../matrix/matrix.hpp"
 
-using std::memcpy;
 
+using std::memcpy;
 using std::this_thread::sleep_for;
 using std::chrono::microseconds;
 
 
 void solvePar(int rows, int cols, int iterations, double td, double h, int sleep, double ** matrix) {
-    int rank;
+    int rank, pmRows, pmCols;
+    double ** partialMatrix;
+    
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if(0 != rank) {
+    // generate partial matrix
+    if(rank == 0) {
+        partialMatrix = allocatePartialMatFromTargetMat(&pmRows, &pmCols, rows,cols,matrix);
+    }
+
+    // todo choose between solvePar1cell1cpu solveParVirtualMat?
+    
+
+    if(rank != 0) {
         deallocateMatrix(rows, matrix);
     }
 
@@ -53,5 +63,13 @@ void solveSeq(int rows, int cols, int iterations, double td, double h, int sleep
             memcpy(linePrevBuffer, lineCurrBuffer, cols * sizeof(double));
         }
     }
+}
+
+void solvePar1cell1cpu(){
+
+}
+
+void solveParVirtualMat(){
+
 }
 
