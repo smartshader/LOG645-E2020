@@ -86,8 +86,9 @@ bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB){
     return true;
 }
 
-// allocate, initiazes and returns a partialMatrix, its # number of rows and cols are set based on its targetMatrix
-// this function is called from solver.cpp
+// allocate, initiazes and returns a partialMatrix
+// its # number of rows and cols are set based on its targetMatrix
+// this function should be called from solver.cpp
 double ** allocatePartialMatFromTargetMat(int * pmRows, int * pmCols, int tmRows, int tmCols, double ** targetMatrix){
 	
     // determine appropriate partialMatrix lengths

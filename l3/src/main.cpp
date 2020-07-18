@@ -10,6 +10,10 @@
 #include "solver/solver.hpp"
 
 #define MASTER_CPU 0
+// color
+#define GREEN   "\033[32m"     
+#define YELLOW   "\033[33m"  
+#define RESET   "\033[0m"
 
 void invalidArguments();
 
@@ -38,8 +42,6 @@ int main(int argc, char* argv[]) {
     double h;
     bool debugMode;
 
-
-
     // Resolution variables.
     // Sleep will be in microseconds during execution.
     int sleep = 1;
@@ -48,9 +50,10 @@ int main(int argc, char* argv[]) {
     long runtime_seq = 0;
     long runtime_par = 0;
 
-    // matrix placeholders for comparison
+    // temporary matrix storage use to store and compare final answers
     double ** tempSeqMatrix = NULL;
     double ** tempParMatrix = NULL;
+
 
     // at the minimum, we need *at least* 5 arguments
     // ________________ MANDATORY (for submission)
@@ -75,11 +78,8 @@ int main(int argc, char* argv[]) {
     h = stod(argv[5], nullptr);
     debugMode = stod(argv[6], nullptr);
 
-    // matrix placeholders for comparison
     tempSeqMatrix = allocateMatrix(rows, cols);
-    tempParMatrix = allocateMatrix(rows,cols);
-
-    // ==================== INITIALIZE PARALLEL ENVIRONMENT ===================
+    tempParMatrix = allocateMatrix(rows, cols);
 
     // create an instance of MPI World
     int mpi_status;
@@ -90,9 +90,6 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // get the number of processes within instanced MPI world
-    int instanceSize;
-    MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
     // get the current rank of CPU
     int cpuRank;
     MPI_Comm_rank(MPI_COMM_WORLD, &cpuRank);
@@ -106,9 +103,6 @@ int main(int argc, char* argv[]) {
 
     // Ensure that no process will start computing early.
     MPI_Barrier(MPI_COMM_WORLD);
-
-
-    // TODO howard : maybe partial matrix should be initialized here instead?
     // ___________________________________________________ Parallel
     runtime_par = parallel(rows, cols, iters, td, h, sleep, tempParMatrix);
 
@@ -117,16 +111,14 @@ int main(int argc, char* argv[]) {
     // ___________________________________________________ RESULTS
     if(MASTER_CPU == cpuRank) {
         printStatistics(1, runtime_seq, runtime_par);
+        // only need a single row to deallocate everything
         deallocateMatrix(rows, tempSeqMatrix);
         deallocateMatrix(rows, tempParMatrix);
     }
 
-
-
-    // ==================== END PARALLEL PROCESSING ===================
     mpi_status = MPI_Finalize();
 
-    if(MPI_SUCCESS != mpi_status) {
+    if(mpi_status != MPI_SUCCESS) {
         cout << "Execution finalization terminated in error." << endl << flush;
         return EXIT_FAILURE;
     }
@@ -135,6 +127,78 @@ int main(int argc, char* argv[]) {
 }
 
 // =======================================================================================
+
+
+long parallel(int rows, int cols, int iters, double td, double h, int sleep, double ** tempParMatrix) {
+    // partialMatrix dimensions
+    int pmRows, pmCols;
+
+    double ** targetMatrix = NULL;
+    double ** partialMatrix = NULL;
+
+    // get the number of processes within instanced MPI world
+    int instanceSize;
+    MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
+    // get the current rank of CPU
+    int cpuRank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &cpuRank);
+
+    targetMatrix = allocateMatrix(rows, cols);
+    fillMatrix(rows, cols, targetMatrix);
+    partialMatrix = allocatePartialMatFromTargetMat(&pmRows, &pmCols, rows, cols, targetMatrix);
+
+    // ___________________________________________________ Setup
+    if(MASTER_CPU == cpuRank) {
+
+        // generate our partialMatrix
+        // cout << YELLOW << "---------------------- Preparing partialMatrix -------- " << RESET << endl << flush;
+        //printMatrix(pmRows, pmCols, partialMatrix);
+    
+    }
+
+    time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
+    // partialMatrix injection should be here...
+    //solvePar(pmRows, pmCols, iters, td, h, sleep, partialMatrix);
+    time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
+
+
+    if(*targetMatrix != nullptr) {
+        cout << "-----  PARALLEL RES -----" << endl << flush;
+        cout << YELLOW << "---------------------- partialMatrix -------- " << RESET << endl << flush;
+         printMatrix(pmRows, pmCols, partialMatrix);
+        // TODO : copy matrix results
+        printMatrix(rows, cols, targetMatrix);
+        deallocateMatrix(rows, targetMatrix);
+        deallocateMatrix(rows, partialMatrix);
+    }
+
+    return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
+}
+
+
+
+
+
+
+
+
+
+
+long sequential(int rows, int cols, int iters, double td, double h, int sleep, double ** tempSeqMatrix) {
+    double ** targetMatrix = allocateMatrix(rows, cols);
+    fillMatrix(rows, cols, targetMatrix);
+
+    time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
+    solveSeq(rows, cols, iters, td, h, sleep, targetMatrix);
+    time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
+
+    cout << "----- SEQUENTIAL RES -----" << endl << flush;
+    // TODO : copy matrix results
+    printMatrix(rows, cols, targetMatrix);
+    deallocateMatrix(rows, targetMatrix);
+    return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
+}
+
 
 void invalidArguments() {
     cout << "Invalid arguments." << endl << flush;
@@ -159,42 +223,3 @@ void initialMatrixDisplayOnly(int rows, int cols) {
     printMatrix(rows, cols, matrix);
     deallocateMatrix(rows, matrix);
 }
-
-long sequential(int rows, int cols, int iters, double td, double h, int sleep, double ** tempSeqMatrix) {
-    double ** matrix = allocateMatrix(rows, cols);
-    fillMatrix(rows, cols, matrix);
-
-    time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
-    solveSeq(rows, cols, iters, td, h, sleep, matrix);
-    time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
-
-    cout << "----- SEQUENTIAL RES -----" << endl << flush;
-    printMatrix(rows, cols, matrix);
-    deallocateMatrix(rows, matrix);
-    return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
-}
-
-long parallel(int rows, int cols, int iters, double td, double h, int sleep, double ** tempParMatrix) {
-    double ** matrix = allocateMatrix(rows, cols);
-    fillMatrix(rows, cols, matrix);
-    // int pmRows, pmCols;
-    // double ** partialMatrix;
-
-    // partialMatrix = allocatePartialMatFromTargetMat(&pmRows, &pmCols, rows,cols,matrix);
-    // TODO Howard : maybe partial matrix should be generated here ?
-
-    time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
-    solvePar(rows, cols, iters, td, h, sleep, matrix);
-    time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
-
-    if(nullptr != *matrix) {
-        cout << "-----  PARALLEL RES -----" << endl << flush;
-        printMatrix(rows, cols, matrix);
-        deallocateMatrix(rows, matrix);
-    }
-
-    return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
-}
-
-
-

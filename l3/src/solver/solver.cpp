@@ -9,6 +9,7 @@
 
 #include "solver.hpp"
 #include "../matrix/matrix.hpp"
+#include "../output/output.hpp"
 
 #define GREEN   "\033[32m"      /* Green */
 #define RESET   "\033[0m"
@@ -25,24 +26,35 @@ using std::memcpy;
 using std::this_thread::sleep_for;
 using std::chrono::microseconds;
 
-// Howard : seems like this is called for every CPU.
 void solvePar(int rows, int cols, int iterations, double td, double h, int sleep, double ** matrix) {
-    int rank, pmRows, pmCols;
-    double ** partialMatrix;
-	// set color output
-    cout << GREEN << "---------------------- solvePar called ---------------------" << RESET << endl << flush;
-    
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-/*
-    if(0 != rank) {
-        deallocateMatrix(rows, matrix);
-    }
+	// get mpi data
+    int cpuRank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &cpuRank);
+	int instanceSize;
+    MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
 
-    sleep_for(microseconds(500000));
 	
-*/	
-	oneCellOneCPU(rows,cols, iterations, td, h, sleep, rows * cols, matrix);
+
+	cout << GREEN << "---------------------- solvePar called ----Rank:["<< cpuRank <<"/"<< instanceSize <<"] " << RESET << endl << flush;
+    printMatrix(rows, cols, matrix);
+
+	/*
+		if(0 != cpuRank) {
+			deallocateMatrix(rows, matrix);
+		}
+
+		sleep_for(microseconds(500000));
+		
+	*/	
+
+	//oneCellOneCPU(rows,cols, iterations, td, h, sleep, rows * cols, matrix);
 }
+
+
+
+
+
+
 
 void oneCellOneCPU(int rows, int cols, int iterations, double td, double h, int sleep, int nbCells, double ** matrix) {
 	
