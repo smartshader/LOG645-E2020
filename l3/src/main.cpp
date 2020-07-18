@@ -155,7 +155,7 @@ void initialMatrixDisplayOnly(int rows, int cols) {
     double ** matrix = allocateMatrix(rows, cols);
 
     fillMatrix(rows, cols, matrix);
-    cout << "-----  INITIAL   -----" << endl << flush;
+    cout << "-----  INITIAL MATRIX   -----" << endl << flush;
     printMatrix(rows, cols, matrix);
     deallocateMatrix(rows, matrix);
 }
@@ -168,9 +168,8 @@ long sequential(int rows, int cols, int iters, double td, double h, int sleep, d
     solveSeq(rows, cols, iters, td, h, sleep, matrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
-    cout << "----- SEQUENTIAL -----" << endl << flush;
+    cout << "----- SEQUENTIAL RES -----" << endl << flush;
     printMatrix(rows, cols, matrix);
-
     deallocateMatrix(rows, matrix);
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 }
@@ -189,7 +188,7 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, dou
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
     if(nullptr != *matrix) {
-        cout << "-----  PARALLEL  -----" << endl << flush;
+        cout << "-----  PARALLEL RES -----" << endl << flush;
         printMatrix(rows, cols, matrix);
         deallocateMatrix(rows, matrix);
     }

@@ -12,7 +12,7 @@
 
 #define GREEN   "\033[32m"      /* Green */
 #define RESET   "\033[0m"
-#define MASTER_CPU 0
+
 
 using std::cout;
 using std::endl;
@@ -30,7 +30,7 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
     int rank, pmRows, pmCols;
     double ** partialMatrix;
 	// set color output
-    cout << GREEN << "---------------------- solvePar called ---------------------" << endl << flush;
+    cout << GREEN << "---------------------- solvePar called ---------------------" << RESET << endl << flush;
     
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 /*
@@ -42,8 +42,6 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
 	
 */	
 	oneCellOneCPU(rows,cols, iterations, td, h, sleep, rows * cols, matrix);
-	// end color output
-    cout << RESET << endl << flush;
 }
 
 void oneCellOneCPU(int rows, int cols, int iterations, double td, double h, int sleep, int nbCells, double ** matrix) {
