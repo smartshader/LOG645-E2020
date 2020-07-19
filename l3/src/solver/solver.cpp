@@ -11,7 +11,8 @@
 #include "../matrix/matrix.hpp"
 #include "../output/output.hpp"
 
-#define GREEN   "\033[32m"      /* Green */
+#define GREEN   "\033[32m"      
+#define MAGENTA   "\033[35m"      
 #define RESET   "\033[0m"
 #define MASTER_CPU 0
 
@@ -34,13 +35,26 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
 	int instanceSize;
     MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
 
-	cout << GREEN << "---------------------- solvePar called ----Rank:["<< cpuRank <<"/"<< instanceSize <<"] " << RESET << endl << flush;
-    printMatrix(rows, cols, matrix);
+	if (rows * cols <= instanceSize){
+		cout << MAGENTA << " ---- ONE CELL -----Rank:["<< cpuRank <<"/"<< instanceSize <<"] "  << RESET << endl << flush;
 
-	if (instanceSize <= rows*cols){
+		// Allocate and initialize globalMatrix when process is 0
+		if (cpuRank == MASTER_CPU)
+		{
+			
+		}
+
+
 		// oneCellOneCPU(rows,cols, iterations, td, h, sleep, rows * cols, matrix);
 	}else{
-		// batch processing
+		cout << MAGENTA << " ---- BATCH CELL -----Rank:["<< cpuRank <<"/"<< instanceSize <<"] "  << RESET << endl << flush;
+
+		// // Allocate and initialize globalMatrix when process is 0
+		// if (cpuRank == MASTER_CPU)
+		// {
+		// 	globalMatrixRefPtr = &(matrix[0][0]);
+		// 	setupScatter(lenCPUGrid, sendCounts, displacement);
+		// }
 	}
 
 	// after each CPU processing that is not MASTER, deallocate it
