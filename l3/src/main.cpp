@@ -20,8 +20,8 @@ void invalidArguments();
 void printInputArguments(int argc, char* argv[]);
 void initialMatrixDisplayOnly(int rows, int cols);
 
-long sequential(int rows, int cols, int iters, double td, double h, int sleep, double ** tempSeqMatrix);
-long parallel(int rows, int cols, int iters, double td, double h, int sleep, double ** tempParMatrix);
+long sequential(int rows, int cols, int iters, double td, double h, int sleep, bool regularOutputs);
+long parallel(int rows, int cols, int iters, double td, double h, int sleep, int cpuRank, bool regularOutputs);
 
 using namespace std::chrono;
 
@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     double h;
 
     //// CHANGE THIS BEFORE SUBMISSION
-    bool regularOutputs = true; //default is 0
+    bool regularOutputs = false; //default is 0
 
     // Resolution variables.
     // Sleep will be in microseconds during execution.
@@ -51,10 +51,6 @@ int main(int argc, char* argv[]) {
     // Timing variables.
     long runtime_seq = 0;
     long runtime_par = 0;
-
-    // temporary matrix storage use to store and compare final answers
-    double ** tempSeqMatrix = NULL;
-    double ** tempParMatrix = NULL;
 
     // at the minimum, we need *at least* 5 arguments
     // ________________ MANDATORY (for submission)
@@ -75,10 +71,6 @@ int main(int argc, char* argv[]) {
     iters = stoi(argv[3], nullptr, 10);
     td = stod(argv[4], nullptr);
     h = stod(argv[5], nullptr);
-    
-    // allocate temp Mats used for final comparison
-    tempSeqMatrix = allocateMatrix(rows, cols);
-    tempParMatrix = allocateMatrix(rows, cols);
 
     // initializes MPI space
     MPI_Init(&argc, &argv);
@@ -87,43 +79,30 @@ int main(int argc, char* argv[]) {
     int cpuRank;
     MPI_Comm_rank(MPI_COMM_WORLD, &cpuRank);
 
-    // ___________________________________________________ Sequential
     if(MASTER_CPU == cpuRank) {
         printInputArguments(argc, argv);
         if (regularOutputs) initialMatrixDisplayOnly(rows, cols);
-        runtime_seq = sequential(rows, cols, iters, td, h, sleep, tempSeqMatrix);
+        runtime_seq = sequential(rows, cols, iters, td, h, sleep, regularOutputs);
     }
 
     // Ensure that no process will start computing early.
     MPI_Barrier(MPI_COMM_WORLD);
 
-    // ___________________________________________________ Parallel
-    runtime_par = parallel(rows, cols, iters, td, h, sleep, tempParMatrix);
+    runtime_par = parallel(rows, cols, iters, td, h, sleep, cpuRank, regularOutputs);
 
     // ___________________________________________________ RESULTS
     if(MASTER_CPU == cpuRank) {
 
-        // matrix outputs
-        if (regularOutputs){
-            cout << "----- SEQUENTIAL RES -----" << endl << flush;
-            printMatrix(rows, cols, tempSeqMatrix);
-            cout << "-----  PARALLEL RES -----" << endl << flush;
-            printMatrix(rows, cols, tempParMatrix);
-        }
-        
         // statistics
         int instanceSize;
         MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
         if (regularOutputs == false){
-            debug_printStatistics(instanceSize, runtime_seq, runtime_par, rows, cols, tempSeqMatrix, tempParMatrix);
+            debug_printStatistics(instanceSize, runtime_seq, runtime_par, rows, cols);
         }
         else
         {
             printStatistics(instanceSize, runtime_seq, runtime_par);
         }
-        
-        deallocateMatrix(rows, tempSeqMatrix);
-        deallocateMatrix(rows, tempParMatrix);
     }
 
     // terminates MPI execution environment
@@ -131,24 +110,29 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
 }
 
-
-long parallel(int rows, int cols, int iters, double td, double h, int sleep, double ** tempParMatrix) {
+long parallel(int rows, int cols, int iters, double td, double h, int sleep, int cpuRank, bool regularOutputs) {
 
     double ** targetMatrix = allocateMatrix(rows, cols);
     fillMatrix(rows, cols, targetMatrix);
 
     time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
-    solvePar2(rows,cols,iters,td,h,sleep,targetMatrix);
+    solvePar(rows,cols,iters,td,h,sleep,targetMatrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
     if(*targetMatrix != nullptr) {
-        cloneMatValuesAtoB(rows, cols, targetMatrix, tempParMatrix);
+        if (cpuRank == 0){
+            // debug purposes
+            if (regularOutputs){
+                cout << "-----  PARALLEL RES -----" << endl << flush;
+                printMatrix(rows, cols, targetMatrix);
+            }
+        }
         deallocateMatrix(rows, targetMatrix);
     }
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 }
 
-long sequential(int rows, int cols, int iters, double td, double h, int sleep, double ** tempSeqMatrix) {
+long sequential(int rows, int cols, int iters, double td, double h, int sleep, bool regularOutputs) {
     double ** targetMatrix = allocateMatrix(rows, cols);
     fillMatrix(rows, cols, targetMatrix);
 
@@ -156,7 +140,12 @@ long sequential(int rows, int cols, int iters, double td, double h, int sleep, d
     solveSeq(rows, cols, iters, td, h, sleep, targetMatrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
-    cloneMatValuesAtoB(rows, cols, targetMatrix, tempSeqMatrix);
+    // debug purposes
+    if (regularOutputs){
+        cout << "----- SEQUENTIAL RES -----" << endl << flush;
+        printMatrix(rows, cols, targetMatrix);
+    }
+
     deallocateMatrix(rows, targetMatrix);
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 }
@@ -167,11 +156,11 @@ void invalidArguments() {
 }
 
 void printInputArguments(int argc, char* argv[]) {
-    cout << "Configuration:" << flush;
+    cout << "Config:" << flush;
 
     for(int i = 0; i < argc; i++) 
         cout << " " << argv[i] << flush;
-    cout << endl << flush;
+    cout << flush;
 }
 
 void initialMatrixDisplayOnly(int rows, int cols) {

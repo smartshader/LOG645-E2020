@@ -4,6 +4,6 @@
 void printMatrix(int rows, int cols, double ** matrix);
 void printStatistics(int threads, long runtime_seq, long runtime_par);
 
-void debug_printStatistics(int threads, long runtime_seq, long runtime_par, int rows, int cols, double ** matrixA, double ** matrixB);
+void debug_printStatistics(int threads, long runtime_seq, long runtime_par, int rows, int cols);
 
 #endif

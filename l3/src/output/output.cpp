@@ -42,15 +42,12 @@ void printStatistics(int threads, long runtime_seq, long runtime_par) {
 }
 
 // used for measuring/truncated results
-void debug_printStatistics(int threads, long runtime_seq, long runtime_par, int rows, int cols, double ** matrixA, double ** matrixB) {
+void debug_printStatistics(int threads, long runtime_seq, long runtime_par, int rows, int cols) {
     double acceleration = 1.0 * runtime_seq / runtime_par;
     double efficiency = acceleration / threads;
-
-    isMatEqual(rows, cols, matrixA, matrixB) ? 
-                cout << GREEN << " OK" << RESET : cout << RED << " NO" << RESET;
-                cout << fixed << setw(6) << ": " << runtime_seq << " uS, "
-                << fixed << setw(12) << runtime_par << " uS, "
-                << fixed << setw(6) << setprecision(4) << acceleration << ", "
-                << fixed << setw(6) << setprecision(4) << efficiency << ", "
-                << fixed << setw(2) << threads << endl << flush;
+    cout << fixed << setw(6) << ": " << runtime_seq << " uS, "
+    << fixed << setw(12) << runtime_par << " uS, "
+    << fixed << setw(6) << setprecision(4) << acceleration << ", "
+    << fixed << setw(6) << setprecision(4) << efficiency << ", "
+    << fixed << setw(2) << threads << endl << flush;
 }

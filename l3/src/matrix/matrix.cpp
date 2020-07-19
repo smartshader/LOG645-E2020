@@ -47,41 +47,6 @@ void fillMatrix(int rows, int cols, double ** matrix) {
     }
 }
 
-// clones matrix values from A to B, returns true if successful, false if there's an error.
-bool cloneMatValuesAtoB(int rows, int cols, double ** matrixA, double ** matrixB){
-	try{
-		for(int row = 0; row < rows; row++) {
-			for(int col = 0; col < cols; col++) {
-				matrixB[row][col] = matrixA[row][col];
-			}
-		}	
-		return true;	
-	}
-	catch(...){
-		return false;
-	}
-}
-
-// compares two matrixes and returns true is they have matching values, false if not.
-bool isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB){
-    
-	for(int row =0; row < rows; row++){
-		for(int col=0; col < cols; col++){
-			if(!double_equals(matrixA[row][col],matrixB[row][col])) {
-				return false;
-			}
-		}
-	}
-    return true;
-}
-
-// required when comparing double/floating points
-bool double_equals(double a, double b)
-{
-	double epsilon = 0.001;
-    return std::abs(a - b) < epsilon;
-}
-
 // fills a matrix with seed
 void debug_fillMatrixWithSeed(int rows, int cols, float seed, double ** matrix) {
      for(int row = 0; row < rows; row++) {
