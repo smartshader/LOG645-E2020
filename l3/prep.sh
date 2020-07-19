@@ -18,6 +18,8 @@ sed -i""  's/\r$//' prep.sh
 _mydir="$(pwd)"
 _studentID=$1
 _serverID="log645-srv-1.logti.etsmtl.ca"
+# _studentID=howardphieu
+# _serverID="35.193.40.96"
 chmod 1744 *
 
 echo "Current working directory: $PWD"

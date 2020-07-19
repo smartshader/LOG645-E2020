@@ -35,6 +35,8 @@ using std::this_thread::sleep_for;
 // 		- take note that i,j coordinates should NEVER be 0 because we do not calculate borders
 // - create cell partitions that are based on the total number of cells divided by total cpus
 // - generate room[x][y], where x = total cpus and y = cell partitions
+//		- current cpuRank would be accessed as room[cpuRank][y]
+//		- the cell (of main matrix resides in room[x][cell])
 void solvePar(int rows, int cols, int iterations, double td, double h, int sleep, double **matrix)
 {
 	double h_area = h * h;
@@ -134,6 +136,7 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
 		// gathers all subMatrixes to totalMatrix to be copied to our targetMatrix
 		MPI_Allgather(subMatrix, cellPartition * 3, MPI_DOUBLE, totalMatrix, stride, MPI_DOUBLE, MPI_COMM_WORLD);
 		
+		// copy to the entire matrix for next iteration
 		copyTotalMatrixToTargetMatrix(rows, cols, stride * instanceSize, totalMatrix, matrix);
 	}
 

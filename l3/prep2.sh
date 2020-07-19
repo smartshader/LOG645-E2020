@@ -12,12 +12,14 @@
 
 ## removes trailings r from scripts ##
 sed -i""  's/\r$//' run2.sh
-sed -i""  's/\r$//' prep.sh
+sed -i""  's/\r$//' prep2.sh
 
 ## variables ##
 _mydir="$(pwd)"
 _studentID=$1
 _serverID="log645-srv-1.logti.etsmtl.ca"
+# _studentID=howardphieu
+# _serverID="35.193.40.96"
 chmod 1744 *
 
 echo "Current working directory: $PWD"

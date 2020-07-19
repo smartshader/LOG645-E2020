@@ -3,9 +3,10 @@ make all
 ## Measurements ##
 
 _detailed=""
+_tempCPU="24"
 
 echo ""
-echo "<<< Measurements 1.A) Variation sur colonnes (m), CPU : 64"
+echo "<<< Measurements 1.A) Variation sur colonnes (m), CPU : 24"
 for i in {50..500..50}
 do
   mpirun -np 64 ./lab3 50 $i 100 0.00025 1 $_detailed
@@ -14,7 +15,7 @@ done
 echo ">>>"
 
 echo ""
-echo "<<< Measurements 1.B) Variation sur lignes (n), CPU : 64"
+echo "<<< Measurements 1.B) Variation sur lignes (n), CPU : 24"
 for i in {50..500..50}
 do
   mpirun -np 64 ./lab3 $i 50 100 0.00025 1 $_detailed
@@ -23,7 +24,7 @@ done
 echo ">>>"
 
 echo ""
-echo "<<< Measurements 1.C) Variation sur # pas de temps, CPU : 64"
+echo "<<< Measurements 1.C) Variation sur # pas de temps, CPU : 24"
 for i in {50..500..50}
 do
   mpirun -np 64 ./lab3 50 50 $i 0.00025 1 $_detailed
