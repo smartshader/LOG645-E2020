@@ -32,6 +32,9 @@ using std::this_thread::sleep_for;
 // - identify its partial rows and col.
 // - calculate the total number of cells of this 1/4 matrix
 // - generate a struct map that contains the total number of cells found to store its coordinates
+// 		- take note that i,j coordinates should NEVER be 0 because we do not calculate borders
+// - create cell partitions that are based on the total number of cells divided by total cpus
+// - generate room[x][y], where x = total cpus and y = cell partitions
 void solvePar(int rows, int cols, int iterations, double td, double h, int sleep, double **matrix)
 {
 	double h_area = h * h;
