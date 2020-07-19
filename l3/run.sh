@@ -13,12 +13,12 @@
 make all
 echo ""
 echo "<<<"
-mpirun -np 16 ./lab3 10 10 20 0.01 1
+mpirun -np 2 ./lab3 10 10 20 0.01 1
 echo ">>>"
 
 echo ""
 echo "<<<"
-mpirun -np 16 ./lab3 5 9 300 0.01 1
+mpirun -np 2 ./lab3 5 9 300 0.01 1
 echo ">>>"
 
 make clean

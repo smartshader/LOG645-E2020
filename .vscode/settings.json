@@ -20,7 +20,9 @@
         "locale": "cpp",
         "iostream": "cpp",
         "iomanip": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "ios": "cpp",
+        "xiosbase": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     double h;
 
     //// CHANGE THIS BEFORE SUBMISSION
-    int debugMode = 1; //default is 0
+    bool regularOutputs = true; //default is 0
 
     // Resolution variables.
     // Sleep will be in microseconds during execution.
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
     // ___________________________________________________ Sequential
     if(MASTER_CPU == cpuRank) {
         printInputArguments(argc, argv);
-        initialMatrixDisplayOnly(rows, cols);
+        if (regularOutputs) initialMatrixDisplayOnly(rows, cols);
         runtime_seq = sequential(rows, cols, iters, td, h, sleep, tempSeqMatrix);
     }
 
@@ -100,21 +100,21 @@ int main(int argc, char* argv[]) {
     // ___________________________________________________ Parallel
     runtime_par = parallel(rows, cols, iters, td, h, sleep, tempParMatrix);
 
-
-
     // ___________________________________________________ RESULTS
     if(MASTER_CPU == cpuRank) {
 
-        cout << "----- SEQUENTIAL RES -----" << endl << flush;
-        printMatrix(rows, cols, tempSeqMatrix);
-        cout << "-----  PARALLEL RES -----" << endl << flush;
-        printMatrix(rows, cols, tempParMatrix);
-
+        // matrix outputs
+        if (regularOutputs){
+            cout << "----- SEQUENTIAL RES -----" << endl << flush;
+            printMatrix(rows, cols, tempSeqMatrix);
+            cout << "-----  PARALLEL RES -----" << endl << flush;
+            printMatrix(rows, cols, tempParMatrix);
+        }
+        
+        // statistics
         int instanceSize;
         MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
-
-        // debug mode
-        if (debugMode == 1){
+        if (regularOutputs == false){
             debug_printStatistics(instanceSize, runtime_seq, runtime_par, rows, cols, tempSeqMatrix, tempParMatrix);
         }
         else
@@ -132,45 +132,21 @@ int main(int argc, char* argv[]) {
 }
 
 
-
 long parallel(int rows, int cols, int iters, double td, double h, int sleep, double ** tempParMatrix) {
-    int pmRows, pmCols;
 
-    double ** targetMatrix = NULL;
-    double ** partialMatrix = NULL;
-
-    targetMatrix = allocateMatrix(rows, cols);
+    double ** targetMatrix = allocateMatrix(rows, cols);
     fillMatrix(rows, cols, targetMatrix);
-    
-    partialMatrix = allocatePartialMatFromTargetMat(&pmRows, &pmCols, rows, cols, targetMatrix);
 
     time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
-    solvePar(pmRows, pmCols, iters, td, h, sleep, partialMatrix);
+    solvePar2(rows,cols,iters,td,h,sleep,targetMatrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
-    // recall that solvePar deallocates everything except the MASTER_CPU
-    // only our MASTER_CPU (Rank 0) will output the final result
-    if(*partialMatrix != nullptr) {
-        cout << YELLOW << "---------------------- partialMatrix -------- " << RESET << endl << flush;
-        printMatrix(pmRows, pmCols, partialMatrix);
-
-        // TODO mirror partialMatrix to targetMatrix
-
+    if(*targetMatrix != nullptr) {
         cloneMatValuesAtoB(rows, cols, targetMatrix, tempParMatrix);
         deallocateMatrix(rows, targetMatrix);
-        deallocateMatrix(pmRows, partialMatrix);
     }
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 }
-
-
-
-
-
-
-
-
-
 
 long sequential(int rows, int cols, int iters, double td, double h, int sleep, double ** tempSeqMatrix) {
     double ** targetMatrix = allocateMatrix(rows, cols);
@@ -185,7 +161,6 @@ long sequential(int rows, int cols, int iters, double td, double h, int sleep, d
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 }
 
-
 void invalidArguments() {
     cout << "Invalid arguments." << endl << flush;
     cout << "Arguments: m n np td h [debugMode]" << endl << flush;
@@ -194,16 +169,13 @@ void invalidArguments() {
 void printInputArguments(int argc, char* argv[]) {
     cout << "Configuration:" << flush;
 
-    for(int i = 0; i < argc; i++) {
+    for(int i = 0; i < argc; i++) 
         cout << " " << argv[i] << flush;
-    }
-
     cout << endl << flush;
 }
 
 void initialMatrixDisplayOnly(int rows, int cols) {
     double ** matrix = allocateMatrix(rows, cols);
-
     fillMatrix(rows, cols, matrix);
     cout << "-----  INITIAL MATRIX   -----" << endl << flush;
     printMatrix(rows, cols, matrix);

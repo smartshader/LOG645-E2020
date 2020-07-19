@@ -2,7 +2,7 @@ make clean
 make all
 ## Measurements ##
 
-_detailed="0"
+_detailed=""
 
 echo ""
 echo "<<< Measurements 1.A) Variation sur colonnes (m), CPU : 64"
