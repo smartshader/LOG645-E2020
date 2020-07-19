@@ -27,7 +27,7 @@ using std::memcpy;
 using std::chrono::microseconds;
 using std::this_thread::sleep_for;
 
-void solvePar2(int rows, int cols, int iterations, double td, double h, int sleep, double **matrix)
+void solvePar(int rows, int cols, int iterations, double td, double h, int sleep, double **matrix)
 {
 	double h_area = h * h;
 
