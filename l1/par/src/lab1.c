@@ -85,7 +85,6 @@ void printRuntime(struct timeval tvs, struct timeval tve)
 // Prints a 2x2 subMatrix for debugging purposes
 void debugPrintSubMatrix(int cpuRank, int instanceSize, int **subMatrix)
 {
-
     for (int p = 0; p < instanceSize; p++)
     {
 

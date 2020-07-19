@@ -13,7 +13,7 @@
 make all
 echo ""
 echo "<<<"
-mpirun -np 16 ./lab3 10 10 0 0.01 1
+mpirun -np 16 ./lab3 10 10 20 0.01 1
 echo ">>>"
 
 echo ""

@@ -35,17 +35,14 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
 	int instanceSize;
     MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
 
-	if (rows * cols <= instanceSize){
-		cout << MAGENTA << " ---- ONE CELL -----Rank:["<< cpuRank <<"/"<< instanceSize <<"] "  << RESET << endl << flush;
-
-		// Allocate and initialize globalMatrix when process is 0
-		if (cpuRank == MASTER_CPU)
-		{
-			
+	// don't use more CPUs than required...
+	// if number of cells in partialMatrix is less than instanceSize
+	if ((rows * cols <= instanceSize)){
+		if (cpuRank < rows * cols){
+			cout << MAGENTA << " ---- ONE CELL -----Rank:["<< cpuRank <<"/"<< instanceSize <<"] "  << RESET << endl << flush;
+			//oneCellOneCPU(rows, cols, iterations, td, h, sleep, rows * cols, matrix);
 		}
-
-
-		// oneCellOneCPU(rows,cols, iterations, td, h, sleep, rows * cols, matrix);
+		
 	}else{
 		cout << MAGENTA << " ---- BATCH CELL -----Rank:["<< cpuRank <<"/"<< instanceSize <<"] "  << RESET << endl << flush;
 
@@ -63,9 +60,6 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
 	}
 
 	sleep_for(microseconds(500000));
-		
-
-	
 }
 
 
@@ -89,35 +83,33 @@ void oneCellOneCPU(int rows, int cols, int iterations, double td, double h, int 
 	int rankBottom = ((rankPosJ + 1) * rows) + rankPosI;
 	int rankLeft = (rankPosJ * rows) + rankPosI - 1;
 	int rankRight = (rankPosJ * rows) + rankPosI + 1;	
-	
 	*/
 	
-	double subMatrix[1][1] {};
+	// double subMatrix[1][1] {};
+	double subMatrix;
     double c, l, r, t, b;	
-	int rank;	
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	int cpuRank;	
+	MPI_Comm_rank(MPI_COMM_WORLD, &cpuRank);
 	
-	int rankPosI = rank % rows;
-	int rankPosJ = rank / rows;
-	double h_square = h * h;	
+	int rankPosI = cpuRank % rows;
+	int rankPosJ = cpuRank / rows;
+	double h_square = h * h;
+
+	// # of cells to allocate
+	// [value, x, y]
+    double *cellCalc = (double *) malloc(sizeof(double) * (rows*cols) * 3);
 	
 	for(int k = 0; k < iterations; k++) {
-		
-		int scatterStatus = MPI_Scatter(&matrix,
-										1,
-										MPI_DOUBLE,
-										&subMatrix,
-										1,
-										MPI_DOUBLE,
-										0,
-										MPI_COMM_WORLD);
-										
-		if (scatterStatus != MPI_SUCCESS)
-		{
-			printf("[Error] MPI_Scatter\n");
-			return;
-		}									
-		
+
+		MPI_Scatter(&matrix,
+					1,
+					MPI_DOUBLE,
+					&subMatrix,
+					1,
+					MPI_DOUBLE,
+					0,
+					MPI_COMM_WORLD);
+
 		c = matrix[rankPosI][rankPosJ];
 		
 		if (rankPosI - 1 >= 0) {
@@ -135,23 +127,27 @@ void oneCellOneCPU(int rows, int cols, int iterations, double td, double h, int 
 		}else{
 			l = 0;
 		}
-		if (rankPosJ + 1 < cols) {
+		if (rankPosJ + 1 <= cols) {
 			r = matrix[rankPosI][rankPosJ + 1];
 		}else{
 			r = 0;
 		}
 		
 		sleep_for(microseconds(sleep));
-        subMatrix[0][0] = c * (1.0 - 4.0 * td / h_square) + (t + b + l + r) * (td / h_square);		
+
+		cout << MAGENTA << cpuRank << " ."<< GREEN << " [c:" << c << " [l:" 
+		<< l << " [r:" << r<< " [t:" << t<< " [b:" << b << "] ___ subMat :" << subMatrix << RESET << endl << flush;
+
+        subMatrix = c * (1.0 - 4.0 * td / h_square) + (t + b + l + r) * (td / h_square);
 		
-	    MPI_Gather(&subMatrix,
-				   1,
-				   MPI_DOUBLE,
-				   &matrix,
-				   1,
-				   MPI_DOUBLE,
-				   0,
-				   MPI_COMM_WORLD);	
+		// MPI_Gather(&subMatrix,
+		// 		   1,
+		// 		   MPI_DOUBLE,
+		// 		   &matrix,
+		// 		   1,
+		// 		   MPI_DOUBLE,
+		// 		   0,
+		// 		   MPI_COMM_WORLD);	
 	}
 }
 
