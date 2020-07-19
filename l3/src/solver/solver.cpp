@@ -27,6 +27,11 @@ using std::memcpy;
 using std::chrono::microseconds;
 using std::this_thread::sleep_for;
 
+// STRATEGY
+// - divide the principal matrix into 1/4
+// - identify its partial rows and col.
+// - calculate the total number of cells of this 1/4 matrix
+// - generate a struct map that contains the total number of cells found to store its coordinates
 void solvePar(int rows, int cols, int iterations, double td, double h, int sleep, double **matrix)
 {
 	double h_area = h * h;
