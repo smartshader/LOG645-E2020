@@ -58,8 +58,6 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
 
 
 
-
-
 void oneCellOneCPU(int rows, int cols, int iterations, double td, double h, int sleep, int nbCells, double ** matrix) {
 	
 	/*
@@ -173,4 +171,6 @@ void solveSeq(int rows, int cols, int iterations, double td, double h, int sleep
             memcpy(linePrevBuffer, lineCurrBuffer, cols * sizeof(double));
         }
     }
+
+
 }

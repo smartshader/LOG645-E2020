@@ -40,7 +40,9 @@ int main(int argc, char* argv[]) {
     int iters;
     double td;
     double h;
-    bool debugMode;
+
+    //// CHANGE THIS BEFORE SUBMISSION
+    int debugMode = 1; //default is 0
 
     // Resolution variables.
     // Sleep will be in microseconds during execution.
@@ -54,7 +56,6 @@ int main(int argc, char* argv[]) {
     double ** tempSeqMatrix = NULL;
     double ** tempParMatrix = NULL;
 
-
     // at the minimum, we need *at least* 5 arguments
     // ________________ MANDATORY (for submission)
     // 1: (int)    n - number of lines
@@ -63,8 +64,6 @@ int main(int argc, char* argv[]) {
     // 4: (double) td - discretized time
     // 5: (float)  h - size of each tile subdivison (square hxh)
 
-    // ________________ OPTIONAL (used for dev purposes)
-    // 6: (bool) enable/disables matrix output
     if(argc < 5) {
         invalidArguments();
         return EXIT_FAILURE;
@@ -76,19 +75,13 @@ int main(int argc, char* argv[]) {
     iters = stoi(argv[3], nullptr, 10);
     td = stod(argv[4], nullptr);
     h = stod(argv[5], nullptr);
-    debugMode = stod(argv[6], nullptr);
-
+    
+    // allocate temp Mats used for final comparison
     tempSeqMatrix = allocateMatrix(rows, cols);
     tempParMatrix = allocateMatrix(rows, cols);
 
-    // create an instance of MPI World
-    int mpi_status;
-    mpi_status = MPI_Init(&argc, &argv);
-    
-    if(MPI_SUCCESS != mpi_status) {
-        cout << "MPI initialization failure." << endl << flush;
-        return EXIT_FAILURE;
-    }
+    // initializes MPI space
+    MPI_Init(&argc, &argv);
 
     // get the current rank of CPU
     int cpuRank;
@@ -103,33 +96,41 @@ int main(int argc, char* argv[]) {
 
     // Ensure that no process will start computing early.
     MPI_Barrier(MPI_COMM_WORLD);
+
     // ___________________________________________________ Parallel
     runtime_par = parallel(rows, cols, iters, td, h, sleep, tempParMatrix);
 
+
+
     // ___________________________________________________ RESULTS
     if(MASTER_CPU == cpuRank) {
-        // TODO Better to print matrix here
+
         cout << "----- SEQUENTIAL RES -----" << endl << flush;
         printMatrix(rows, cols, tempSeqMatrix);
         cout << "-----  PARALLEL RES -----" << endl << flush;
         printMatrix(rows, cols, tempParMatrix);
-        printStatistics(1, runtime_seq, runtime_par);
-        // only need a single row to deallocate everything
+
+        int instanceSize;
+        MPI_Comm_size(MPI_COMM_WORLD, &instanceSize);
+
+        // debug mode
+        if (debugMode == 1){
+            debug_printStatistics(instanceSize, runtime_seq, runtime_par, rows, cols, tempSeqMatrix, tempParMatrix);
+        }
+        else
+        {
+            printStatistics(instanceSize, runtime_seq, runtime_par);
+        }
+        
         deallocateMatrix(rows, tempSeqMatrix);
         deallocateMatrix(rows, tempParMatrix);
     }
 
-    mpi_status = MPI_Finalize();
-
-    if(mpi_status != MPI_SUCCESS) {
-        cout << "Execution finalization terminated in error." << endl << flush;
-        return EXIT_FAILURE;
-    }
-
+    // terminates MPI execution environment
+    MPI_Finalize();
     return EXIT_SUCCESS;
 }
 
-// =======================================================================================
 
 
 long parallel(int rows, int cols, int iters, double td, double h, int sleep, double ** tempParMatrix) {
@@ -147,7 +148,6 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, dou
     solvePar(pmRows, pmCols, iters, td, h, sleep, partialMatrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
-
     // recall that solvePar deallocates everything except the MASTER_CPU
     // only our MASTER_CPU (Rank 0) will output the final result
     if(*partialMatrix != nullptr) {
@@ -160,7 +160,6 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, dou
         deallocateMatrix(rows, targetMatrix);
         deallocateMatrix(pmRows, partialMatrix);
     }
-
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 }
 
@@ -189,7 +188,7 @@ long sequential(int rows, int cols, int iters, double td, double h, int sleep, d
 
 void invalidArguments() {
     cout << "Invalid arguments." << endl << flush;
-    cout << "Arguments: m n np td h" << endl << flush;
+    cout << "Arguments: m n np td h [debugMode]" << endl << flush;
 }
 
 void printInputArguments(int argc, char* argv[]) {

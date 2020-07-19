@@ -3,24 +3,22 @@
     # mpirun -np [a] ./lab3 [1] [2] [3] [4] [5] [6]
     # ________________ MANDATORY (for submission)
     # a: (int)    a - # of processors to use (1, 2, 4, 8, 16, 32, 64)
+    #
     # 1: (int)    n - number of lines
     # 2: (int)    m - number of columns
     # 3: (int)    tp - number of timesteps/iterations
     # 4: (double) td - discretized time
     # 5: (float)  h - size of each tile subdivison (square h x h)
-    #
-    # ________________ OPTIONAL (used for dev purposes)
-    # 6: (bool) enable/disables matrix output
 
 make all
 echo ""
 echo "<<<"
-mpirun -np 4 ./lab3 7 10 300 0.01 1 9
+mpirun -np 4 ./lab3 7 10 0 0.01 1
 echo ">>>"
 
 echo ""
 echo "<<<"
-mpirun -np 4 ./lab3 5 9 300 0.01 1 9
+mpirun -np 4 ./lab3 5 9 300 0.01 1
 echo ">>>"
 
 make clean

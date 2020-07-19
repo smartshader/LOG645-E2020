@@ -61,9 +61,6 @@ bool cloneMatValuesAtoB(int rows, int cols, double ** matrixA, double ** matrixB
 	try{
 		for(int row = 0; row < rows; row++) {
 			for(int col = 0; col < cols; col++) {
-				// cerr << "Row: " << row << "      Col: " << col << endl << flush;
-				
-				// cerr << "Value: " << matrixA[row][col] << endl << flush;				
 				matrixB[row][col] = matrixA[row][col];
 			}
 		}	
