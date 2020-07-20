@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     double h;
 
     //// CHANGE THIS BEFORE SUBMISSION
-    bool regularOutputs = false; //default is 0
+    bool regularOutputs = true; //default is 1
 
     // Resolution variables.
     // Sleep will be in microseconds during execution.
