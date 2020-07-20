@@ -37,6 +37,10 @@ using std::this_thread::sleep_for;
 // - generate room[x][y], where x = total cpus and y = cell partitions
 //		- current cpuRank would be accessed as room[cpuRank][y]
 //		- the cell (of main matrix resides in room[x][cell])
+//		- holds reference info of original matrix
+//	- generate subMatrixes to store calculated information
+// 	- generate totalMatrix which agglomerates all subMatrixes using MPI_Allgather
+//	- copy totalMatrix to main matrix for next iteration
 void solvePar(int rows, int cols, int iterations, double td, double h, int sleep, double **matrix)
 {
 	double h_area = h * h;
