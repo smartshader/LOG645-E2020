@@ -11,8 +11,8 @@
 ##          ssh-copy-id AJ12345@log645-srv-1.logti.etsmtl.ca ##
 
 ## removes trailings r from scripts ##
-sed -i""  's/\r$//' run.sh
-sed -i""  's/\r$//' prep.sh
+sed -i""  's/\r$//' run2.sh
+sed -i""  's/\r$//' prep2.sh
 
 ## variables ##
 _mydir="$(pwd)"
@@ -25,12 +25,12 @@ chmod 1744 *
 echo "Current working directory: $PWD"
 echo ">>> [SERVER] : deleting old contents"
 ## replace w/ your student ID ##
-ssh $_studentID@$_serverID 'rm -r src/ Makefile run.sh'
+ssh $_studentID@$_serverID 'rm -r src/ Makefile run2.sh'
 echo ">>> [SERVER] : transferring new files"
 echo ''
-scp -p -r $_mydir'/src' $_mydir'/Makefile' $_mydir'/run.sh' $_studentID@$_serverID:
-ssh $_studentID@$_serverID 'chmod +x run.sh'
-ssh $_studentID@$_serverID './run.sh'
+scp -p -r $_mydir'/src' $_mydir'/Makefile' $_mydir'/run2.sh' $_studentID@$_serverID:
+ssh $_studentID@$_serverID 'chmod +x run2.sh'
+ssh $_studentID@$_serverID './run2.sh'
 echo ''
 echo ">>> [shell process complete]"
 echo ''

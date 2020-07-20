@@ -14,15 +14,19 @@ using std::flush;
 using std::setprecision;
 using std::setw;
 
+#define GREEN "\033[32m"      
+#define MAGENTA "\033[35m"    
+#define RED  "\033[31m"  
+#define RESET   "\033[0m"
+#define MASTER_CPU 0
+
 void printMatrix(int rows, int cols, double ** matrix) {
     for(int row = 0; row < rows; row++) {
         for(int col = 0; col < cols; col++) {
-            cout << fixed << setw(4) << setprecision(0) << matrix[row][col] << flush;
+            cout << fixed << setw(12) << setprecision(2) << matrix[row][col] << flush;
         }
-
         cout << endl << flush;
     }
-
     cout << endl << flush;
 }
 
@@ -30,54 +34,20 @@ void printStatistics(int threads, long runtime_seq, long runtime_par) {
     double acceleration = 1.0 * runtime_seq / runtime_par;
     double efficiency = acceleration / threads;
 
-    cout << "Runtime sequential: " << runtime_seq / 1000000.0 << " seconds" << endl << flush;
-    cout << "Runtime parallel  : " << runtime_par / 1000000.0 << " seconds" << endl << flush;
+    cout << "Runtime sequential: " << runtime_seq << " uS" << endl << flush;
+    cout << "Runtime parallel  : " << runtime_par  << " uS" << endl << flush;
     cout << "Acceleration      : " << acceleration << endl << flush;
     cout << "Efficiency        : " << efficiency << endl << flush;
+    cout << "# threads  : " << threads << endl << flush;
 }
 
-void debug_printStatistics(int threads, long runtime_seq, long runtime_par,double ** matrixA, double ** matrixB) {
+// used for measuring/truncated results
+void debug_printStatistics(int threads, long runtime_seq, long runtime_par, int rows, int cols) {
     double acceleration = 1.0 * runtime_seq / runtime_par;
     double efficiency = acceleration / threads;
-
-    cout << "Runtime sequential: " << runtime_seq / 1000000.0 << " seconds" << endl << flush;
-    cout << "Runtime parallel  : " << runtime_par / 1000000.0 << " seconds" << endl << flush;
-    cout << "Acceleration      : " << acceleration << endl << flush;
-    cout << "Efficiency        : " << efficiency << endl << flush;
-}
-
-void debug_isMatEqual(int rows, int cols, double ** matrixA, double ** matrixB){
-    // DEBUG -------------------------------------------------------- compares two EQUAL matrixes
-    fillMatrix(rows, cols, matrixA);
-    cout << "Matrix Seq (true test) : tempSeqMatrix" << endl << flush;
-    printMatrix(rows, cols, matrixA);
-    fillMatrix(rows, cols, matrixB);
-    cout << "Matrix Par (true test) : tempParMatrix" << endl << flush;
-    printMatrix(rows, cols, matrixB);
-
-    bool isEqual = isMatEqual(rows, cols, matrixA, matrixB);
-
-    if(isEqual == true){
-        printf("Matrix A and B are equal\n");		
-    }
-    else{
-        printf("Matrix A and B are different\n");			
-    }
-
-    // DEBUG -------------------------------------------------------- compares two NON-EQUAL matrixes
-    debug_fillMatrixWithSeed(rows, cols, 2.5, matrixA);
-    cout << "Matrix Seq (false test) : tempSeqMatrix" << endl << flush;
-    printMatrix(rows, cols, matrixA);
-    debug_fillMatrixWithSeed(rows, cols, 4.3, matrixB);
-    cout << "Matrix Par (false test) : tempParMatrix" << endl << flush;
-    printMatrix(rows, cols, matrixB);
-
-    isEqual = isMatEqual(rows, cols, matrixA, matrixB);
-
-    if(isEqual == true){
-        printf("Matrix A and B are equal\n");		
-    }
-    else{
-        printf("Matrix A and B are different\n");			
-    }
+    cout << fixed << setw(6) << ": " << runtime_seq << " uS, "
+    << fixed << setw(12) << runtime_par << " uS, "
+    << fixed << setw(6) << setprecision(4) << acceleration << ", "
+    << fixed << setw(6) << setprecision(4) << efficiency << ", "
+    << fixed << setw(2) << threads << endl << flush;
 }
