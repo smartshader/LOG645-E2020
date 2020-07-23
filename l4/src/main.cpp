@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <chrono>
 #include <thread>
+#include <string>
 
 #include "matrix/matrix.hpp"
 #include "output/output.hpp"
@@ -112,7 +113,7 @@ long parallel(int rows, int cols, int iters, double td, double h, double ** matr
     fillMatrix(rows, cols, matrix);
 
     time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
-    solvePar(rows, cols, iters, td, h, matrix);
+    //solvePar(rows, cols, iters, td, h, matrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
