@@ -12,9 +12,9 @@
 void usage();
 void command(int argc, char* argv[]);
 
-void initial(int rows, int cols, double ** matrix);
-long sequential(int rows, int cols, int iters, double td, double h, double ** matrix);
-long parallel(int rows, int cols, int iters, double td, double h, double ** matrix);
+void initial(int rows, int cols, double** matrix);
+long sequential(int rows, int cols, int iters, double td, double h, double** matrix);
+long parallel(int rows, int cols, int iters, double td, double h, double** matrix);
 
 using namespace std::chrono;
 
@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     long runtime_seq = 0;
     long runtime_par = 0;
 
-    if(10 != argc) {
+    if (10 != argc) {
         usage();
         return EXIT_FAILURE;
     }
@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
 
     command(argc, argv);
 
-    double ** matrix = allocateMatrix(rows, cols);
+    double** matrix = allocateMatrix(rows, cols);
 
 
     cout << "-----  INITIAL   -----" << endl << flush;
@@ -88,18 +88,18 @@ void usage() {
 void command(int argc, char* argv[]) {
     cout << "Command:" << flush;
 
-    for(int i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; i++) {
         cout << " " << argv[i] << flush;
     }
 
     cout << endl << flush;
 }
 
-void initial(int rows, int cols, double ** matrix) {
+void initial(int rows, int cols, double** matrix) {
     fillMatrix(rows, cols, matrix);
 }
 
-long sequential(int rows, int cols, int iters, double td, double h, double ** matrix) {
+long sequential(int rows, int cols, int iters, double td, double h, double** matrix) {
     fillMatrix(rows, cols, matrix);
 
     time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
@@ -109,11 +109,11 @@ long sequential(int rows, int cols, int iters, double td, double h, double ** ma
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 }
 
-long parallel(int rows, int cols, int iters, double td, double h, double ** matrix) {
+long parallel(int rows, int cols, int iters, double td, double h, double** matrix) {
     fillMatrix(rows, cols, matrix);
 
     time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
-    //solvePar(rows, cols, iters, td, h, matrix);
+    solvePar(rows, cols, iters, td, h, matrix);
     time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
