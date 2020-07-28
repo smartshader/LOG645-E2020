@@ -13,9 +13,9 @@ using std::flush;
 using std::setprecision;
 using std::setw;
 
-void printMatrix(int rows, int cols, double ** matrix) {
-    for(int row = 0; row < rows; row++) {
-        for(int col = 0; col < cols; col++) {
+void printMatrix(int rows, int cols, double** matrix) {
+    for (int row = 0; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
             cout << fixed << setw(12) << setprecision(2) << matrix[row][col] << flush;
         }
 
@@ -25,9 +25,9 @@ void printMatrix(int rows, int cols, double ** matrix) {
     cout << endl << flush;
 }
 
-void printMatrixPartial(int minRow, int maxRow, int minCol, int maxCol, double ** matrix) {
-    for(int row = minRow; row < maxRow; row++) {
-        for(int col = minCol; col < maxCol; col++) {
+void printMatrixPartial(int minRow, int maxRow, int minCol, int maxCol, double** matrix) {
+    for (int row = minRow; row < maxRow; row++) {
+        for (int col = minCol; col < maxCol; col++) {
             cout << fixed << setw(12) << setprecision(2) << matrix[row][col] << flush;
         }
 
