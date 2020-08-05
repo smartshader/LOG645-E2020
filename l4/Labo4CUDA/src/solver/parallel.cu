@@ -43,6 +43,33 @@ void solvePar(int rows, int cols, int iterations, double td, double h, double** 
     addWithCuda(a, b, c, ELEMENTS);
 }
 
+
+// before in lab 3 (too complex in the end)
+    // get initial totalMatrix
+    // extract partialMatrix
+    // in the main calculation method
+    //      for each iteration
+    //          ||calculate the heatmap of partialMatrix||
+    //      end for loop
+    // copy/paste the values back to totalMatrix
+
+// AFTER in lab 3 (this final method)
+    // in the main calculation method
+    //      for each iteration
+    //          get initial totalMatrix
+    //          extract partialMatrix
+    //              ||calculate the heatmap of partialMatrix||
+    //              sync
+    //          copy/paste the values back to totalMatrix
+    //      end for loop
+
+// for lab 4
+// for each iteration
+//      get totalMatrix
+//      extract partialMatrix
+//              || parallel calculate partialMatrix ||
+//      copy paste partial to total
+// end for
 void addWithCuda(const int* a, const int* b, int* c, int elements) {
     int* dev_a = nullptr;
     int* dev_b = nullptr;
@@ -59,7 +86,12 @@ void addWithCuda(const int* a, const int* b, int* c, int elements) {
 
     errCheck(cudaMemcpy(dev_a, a, elements * sizeof(int), cudaMemcpyHostToDevice));
     errCheck(cudaMemcpy(dev_b, b, elements * sizeof(int), cudaMemcpyHostToDevice));
+    
+    // for should be here
+    // extract partial matrix from total matrix
 
+    // in our addKernel, arguments should be
+    // totalInputMatrix, partialMatrix, totalOutputMatrix
     addKernel << <dimGrid, dimBlock >> > (dev_a, dev_b, dev_c, elements);
 
     errCheck(cudaGetLastError());
