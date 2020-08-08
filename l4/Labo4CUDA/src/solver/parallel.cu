@@ -6,10 +6,10 @@
 
 #include "parallel.cuh"
 
-#define ELEMENTS 5
+//#define ELEMENTS 5
 
 #define errCheck(code) { errorCheck((code), __FILE__, __LINE__); }
-void addWithCuda(const int* a, const int* b, int* c, int elements);
+void addWithCuda(int rows, int cols, int iterations, double td, double h, double** matrix);
 
 using std::cout;
 using std::flush;
@@ -23,11 +23,12 @@ inline void errorCheck(cudaError_t code, const char* file, int line) {
     }
 }
 
-__global__ void addKernel(const int* a, const int* b, int* c, int elements) {
+__global__ void addKernel(double* a, double* c, int elements) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     printf("x = %d, BlockIdx = %d, BlockDimx = %d, threadIdx = %d\n", x, blockIdx.x, blockDim.x, threadIdx.x);
     if (x < elements) {
-        c[x] = a[x] + b[x];
+        //c[x] = a[x] + b[x];
+        c[x] = a[x];
     }
 }
 
@@ -36,11 +37,11 @@ void solvePar(int rows, int cols, int iterations, double td, double h, double** 
 
     // Example.
     // int elements = 5;
-    const int a[ELEMENTS] = { 1, 2, 3, 4, 5 };
-    const int b[ELEMENTS] = { 5, 4, 3, 2, 1 };
-    int c[ELEMENTS] = { 0 };
+    //double a[ELEMENTS] = { 1, 2, 3, 4, 5 };
+    //double b[ELEMENTS] = { 5, 4, 3, 2, 1 };
+    //double c[ELEMENTS] = { 0 };
 
-    addWithCuda(a, b, c, ELEMENTS);
+    addWithCuda(rows, cols, iterations, td, h, matrix);
 }
 
 
@@ -70,41 +71,50 @@ void solvePar(int rows, int cols, int iterations, double td, double h, double** 
 //              || parallel calculate partialMatrix ||
 //      copy paste partial to total
 // end for
-void addWithCuda(const int* a, const int* b, int* c, int elements) {
-    int* dev_a = nullptr;
-    int* dev_b = nullptr;
-    int* dev_c = nullptr;
+void addWithCuda(int rows, int cols, int iterations, double td, double h, double** matrix) {
+    double* dev_matrix = nullptr;
+    double* dev_subMatrix = nullptr;
+
+    // calculate partial rows and cols matrix
+    int partialRow = (rows % 2 == 0) ? rows / 2 : rows / 2 + 1;
+    int partialCol = (cols % 2 == 0) ? cols / 2 : cols / 2 + 1;
+
+    // calculate the total number of tiles to process, instanciate them
+    int totalCells = (partialRow - 1) * (partialCol - 1);
+
+    double* subMatrix = (double*)malloc(sizeof(double) * totalCells );
 
     dim3 dimGrid(1, 1, 1);
     dim3 dimBlock(5, 1, 1);
 
     errCheck(cudaSetDevice(0));
 
-    errCheck(cudaMalloc((void**)&dev_c, elements * sizeof(int)));
-    errCheck(cudaMalloc((void**)&dev_a, elements * sizeof(int)));
-    errCheck(cudaMalloc((void**)&dev_b, elements * sizeof(int)));
+    errCheck(cudaMalloc((void**)&dev_subMatrix, totalCells * sizeof(int)));
+    errCheck(cudaMalloc((void**)&dev_matrix, totalCells * sizeof(int)));
+    //errCheck(cudaMalloc((void**)&dev_b, totalCells * sizeof(int)));
 
-    errCheck(cudaMemcpy(dev_a, a, elements * sizeof(int), cudaMemcpyHostToDevice));
-    errCheck(cudaMemcpy(dev_b, b, elements * sizeof(int), cudaMemcpyHostToDevice));
+    errCheck(cudaMemcpy(dev_matrix, matrix, totalCells * sizeof(int), cudaMemcpyHostToDevice));
+    //errCheck(cudaMemcpy(dev_b, b, totalCells * sizeof(int), cudaMemcpyHostToDevice));
     
     // for should be here
     // extract partial matrix from total matrix
 
     // in our addKernel, arguments should be
     // totalInputMatrix, partialMatrix, totalOutputMatrix
-    addKernel << <dimGrid, dimBlock >> > (dev_a, dev_b, dev_c, elements);
+    //addKernel << <dimGrid, dimBlock >> > (dev_matrix, dev_b, dev_subMatrix, totalCells);
+    addKernel << <dimGrid, dimBlock >> > (dev_matrix, dev_subMatrix, totalCells);
 
     errCheck(cudaGetLastError());
     errCheck(cudaDeviceSynchronize());
-    errCheck(cudaMemcpy(c, dev_c, elements * sizeof(int), cudaMemcpyDeviceToHost));
-    errCheck(cudaFree(dev_a));
-    errCheck(cudaFree(dev_b));
-    errCheck(cudaFree(dev_c));
+    errCheck(cudaMemcpy(subMatrix, dev_subMatrix, totalCells * sizeof(int), cudaMemcpyDeviceToHost));
+    errCheck(cudaFree(dev_matrix));
+    //errCheck(cudaFree(dev_b));
+    errCheck(cudaFree(dev_subMatrix));
     errCheck(cudaDeviceReset());
 
-    cout << "c = { " << c[0] << flush;
-    for (int i = 1; i < elements; i++) {
-        cout << ", " << c[i] << flush;
+    cout << "c = { " << subMatrix[0] << flush;
+    for (int i = 1; i < totalCells; i++) {
+        cout << ", " << subMatrix[i] << flush;
     }
 
     cout << " }" << endl << flush;
