@@ -10,6 +10,7 @@
 
 #define errCheck(code) { errorCheck((code), __FILE__, __LINE__); }
 void addWithCuda(int rows, int cols, int iterations, double td, double h, double** matrix);
+void checkLocalDevice();
 
 using std::cout;
 using std::flush;
@@ -42,6 +43,8 @@ void solvePar(int rows, int cols, int iterations, double td, double h, double** 
     //double c[ELEMENTS] = { 0 };
 
     addWithCuda(rows, cols, iterations, td, h, matrix);
+
+    checkLocalDevice();
 }
 
 
@@ -102,7 +105,7 @@ void addWithCuda(int rows, int cols, int iterations, double td, double h, double
     // in our addKernel, arguments should be
     // totalInputMatrix, partialMatrix, totalOutputMatrix
     //addKernel << <dimGrid, dimBlock >> > (dev_matrix, dev_b, dev_subMatrix, totalCells);
-    addKernel << <dimGrid, dimBlock >> > (dev_matrix, dev_subMatrix, totalCells);
+    addKernel <<<dimGrid, dimBlock>>> (dev_matrix, dev_subMatrix, totalCells);
 
     errCheck(cudaGetLastError());
     errCheck(cudaDeviceSynchronize());
@@ -118,4 +121,34 @@ void addWithCuda(int rows, int cols, int iterations, double td, double h, double
     }
 
     cout << " }" << endl << flush;
+
+    
+}
+
+void checkLocalDevice() {
+    // https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#occupancy-calculator
+
+    int numBlocks;        // Occupancy in terms of active blocks
+    int blockSize = 32;
+
+    // These variables are used to convert occupancy to warps
+    int device;
+    cudaDeviceProp prop;
+    int activeWarps;
+    int maxWarps;
+
+    cudaGetDevice(&device);
+    cudaGetDeviceProperties(&prop, device);
+
+    cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+        &numBlocks,
+        addKernel,
+        blockSize,
+        0);
+
+    activeWarps = numBlocks * blockSize / prop.warpSize;
+    maxWarps = prop.maxThreadsPerMultiProcessor / prop.warpSize;
+
+    std::cout << "Occupancy: " << (double)activeWarps / maxWarps * 100 << "%" << std::endl;
+
 }
