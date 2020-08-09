@@ -10,7 +10,8 @@
 
 #define errCheck(code) { errorCheck((code), __FILE__, __LINE__); }
 void addWithCuda(int rows, int cols, int iterations, double td, double h, double** matrix);
-double* convert2DMatTo1D(double** matrix);
+double* convert2DMatTo1D(int rows, int cols, double** matrix);
+double** convert1DMatTo2D(int rows, int cols, double* matrix);
 void checkLocalDevice();
 
 using std::cout;
@@ -25,12 +26,13 @@ inline void errorCheck(cudaError_t code, const char* file, int line) {
     }
 }
 
-__global__ void addKernel(double* a, double* c, int elements) {
+__global__ void addKernel(int rows, int cols, double* matrix, int elements) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     printf("x = %d, BlockIdx = %d, BlockDimx = %d, threadIdx = %d\n", x, blockIdx.x, blockDim.x, threadIdx.x);
     if (x < elements) {
         //c[x] = a[x] + b[x];
-        c[x] = a[x];
+        matrix[x] = matrix[x];
+        //matrix[i][j] = c * (1.0 - 4.0 * td / h_square) + (t + b + l + r) * (td / h_square);
     }
 }
 
@@ -74,33 +76,35 @@ void solvePar(int rows, int cols, int iterations, double td, double h, double** 
 //      copy paste partial to total
 // end for
 void addWithCuda(int rows, int cols, int iterations, double td, double h, double** matrix) {
+
+    // min possible rows/cols/iterations = 3
+    // max possible rows/cols/iterations = 10 000
+
     double* dev_matrix = nullptr;
-    double* dev_subMatrix = nullptr;
-
-    dev_matrix = convert2DMatTo1D(matrix);
+    double* convertedMatrix = nullptr;
 
 
+    convertedMatrix = convert2DMatTo1D(rows, cols, matrix);
 
-    // calculate partial rows and cols matrix
-    int partialRow = (rows % 2 == 0) ? rows / 2 : rows / 2 + 1;
-    int partialCol = (cols % 2 == 0) ? cols / 2 : cols / 2 + 1;
 
     // calculate the total number of tiles to process, instanciate them
-    int totalCells = (partialRow - 1) * (partialCol - 1);
+    int totalCells = rows * cols;
 
-    double* subMatrix = (double*)malloc(sizeof(double) * totalCells );
 
-    dim3 dimGrid(1, 1, 1);
-    dim3 dimBlock(5, 1, 1);
+    // 16 by 16 threads for each block (in my case I can only have 32 threads at once)
+    // something to note to keep dynamic thread allocation as per device
+    dim3 threadsPerBlock(16, 16);
+    dim3 numBlocks(cols/threadsPerBlock.x, rows/threadsPerBlock.y);
+    
 
     errCheck(cudaSetDevice(0));
 
-    errCheck(cudaMalloc((void**)&dev_subMatrix, totalCells * sizeof(int)));
-    errCheck(cudaMalloc((void**)&dev_matrix, totalCells * sizeof(int)));
+
+    errCheck(cudaMalloc((void**)&dev_matrix, totalCells * sizeof(double)));
     //errCheck(cudaMalloc((void**)&dev_b, totalCells * sizeof(int)));
 
     //errCheck(cudaMemcpy(dev_matrix, matrix, totalCells * sizeof(int), cudaMemcpyHostToDevice));
-    errCheck(cudaMemcpy(dev_matrix, matrix, totalCells * sizeof(int), cudaMemcpyHostToDevice));
+    errCheck(cudaMemcpy(dev_matrix, convertedMatrix, totalCells * sizeof(double), cudaMemcpyHostToDevice));
     //errCheck(cudaMemcpy(dev_b, b, totalCells * sizeof(int), cudaMemcpyHostToDevice));
     
     // for should be here
@@ -114,22 +118,24 @@ void addWithCuda(int rows, int cols, int iterations, double td, double h, double
     //dim3 threadsPerBlock(16, 16);
     //dim3 numBlocks(N / threadsPerBlock.x, N / threadsPerBlock.y);
     //MatAdd << <numBlocks, threadsPerBlock >> > (A, B, C);
-    addKernel <<<dimGrid, dimBlock>>> (dev_matrix, dev_subMatrix, totalCells);
+    addKernel <<<numBlocks, threadsPerBlock>>> (rows, cols, dev_matrix, totalCells);
 
     errCheck(cudaGetLastError());
     errCheck(cudaDeviceSynchronize());
-    errCheck(cudaMemcpy(subMatrix, dev_subMatrix, totalCells * sizeof(int), cudaMemcpyDeviceToHost));
+    errCheck(cudaMemcpy(convertedMatrix, dev_matrix, totalCells * sizeof(int), cudaMemcpyDeviceToHost));
     errCheck(cudaFree(dev_matrix));
     //errCheck(cudaFree(dev_b));
-    errCheck(cudaFree(dev_subMatrix));
+
     errCheck(cudaDeviceReset());
 
-    cout << "c = { " << subMatrix[0] << flush;
+
     for (int i = 1; i < totalCells; i++) {
-        cout << ", " << subMatrix[i] << flush;
+        cout << ", " << convertedMatrix[i] << flush;
     }
 
     cout << " }" << endl << flush;
+
+    matrix = convert1DMatTo2D(rows, cols, convertedMatrix);
 
     
 }
@@ -164,9 +170,21 @@ void checkLocalDevice() {
     std::cout << "Occupancy: " << (double)activeWarps / maxWarps * 100 << "%" << std::endl;
 }
 
+
 // todo
-double* convert2DMatTo1D(double** matrix) {
-    double* convertedMatrix = nullptr;
+double* convert2DMatTo1D(int rows, int cols, double** matrix) {
+    double* convertedMatrix = new double [rows*cols];
+
+    return convertedMatrix;
+}
+
+// todo
+double** convert1DMatTo2D(int rows, int cols, double* matrix) {
+    double** convertedMatrix = new double* [rows];
+
+    for (int i = 0; i < rows; i++) {
+        convertedMatrix[i] = new double[cols];
+    }
 
     return convertedMatrix;
 }
