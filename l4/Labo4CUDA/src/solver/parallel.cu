@@ -10,6 +10,7 @@
 
 #define errCheck(code) { errorCheck((code), __FILE__, __LINE__); }
 void addWithCuda(int rows, int cols, int iterations, double td, double h, double** matrix);
+double* convert2DMatTo1D(double** matrix);
 void checkLocalDevice();
 
 using std::cout;
@@ -75,6 +76,8 @@ void solvePar(int rows, int cols, int iterations, double td, double h, double** 
 void addWithCuda(int rows, int cols, int iterations, double td, double h, double** matrix) {
     double* dev_matrix = nullptr;
     double* dev_subMatrix = nullptr;
+
+    dev_matrix = convert2DMatTo1D(matrix);
 
 
 
