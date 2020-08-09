@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -7,6 +8,7 @@
 #include "parallel.cuh"
 
 //#define ELEMENTS 5
+#define MAXTHREADSPERBLOCK 1024
 
 #define errCheck(code) { errorCheck((code), __FILE__, __LINE__); }
 void addWithCuda(int rows, int cols, int iterations, double td, double h, double** matrix);
@@ -17,6 +19,9 @@ void checkLocalDevice();
 using std::cout;
 using std::flush;
 using std::endl;
+using std::fixed;
+using std::setprecision;
+using std::setw;
 
 inline void errorCheck(cudaError_t code, const char* file, int line) {
     if (cudaSuccess != code) {
@@ -26,22 +31,24 @@ inline void errorCheck(cudaError_t code, const char* file, int line) {
     }
 }
 
-__global__ void addKernel(int rows, int cols, double* matrix, int elements) {
+__global__ void addKernel(int rows, int cols, double interations, double td, double h, double* matrix, int elements) {
+    extern __shared__ int threadCount;
     int x = blockIdx.x * blockDim.x + threadIdx.x;
-    printf("x = %d, BlockIdx = %d, BlockDimx = %d, threadIdx = %d\n", x, blockIdx.x, blockDim.x, threadIdx.x);
-    if (x < elements) {
-        //c[x] = a[x] + b[x];
-        matrix[x] = matrix[x];
-        //matrix[i][j] = c * (1.0 - 4.0 * td / h_square) + (t + b + l + r) * (td / h_square);
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    //printf("x = %d, BlockIdx = %d, BlockDimx = %d, threadIdx = %d\n", x, blockIdx.x, blockDim.x, threadIdx.x);
+
+    if (((x < (cols - 1)) && (x > 0)) &&
+        ((y < (rows - 1)) && (y > 0))) {
+
+        printf("x = %d, BlockIdx = %d, BlockDimx = %d, threadIdx = %d\n", x, blockIdx.x, blockDim.x, threadIdx.x);
+        printf("y = %d, BlockIdy = %d, BlockDimy = %d, threadIdy = %d\n", y, blockIdx.y, blockDim.y, threadIdx.y);
+        threadCount++;
+        printf("ThreadCount = %i\n", threadCount);
     }
 }
 
 void solvePar(int rows, int cols, int iterations, double td, double h, double** matrix) {
-    // Example.
-    // int elements = 5;
-    //double a[ELEMENTS] = { 1, 2, 3, 4, 5 };
-    //double b[ELEMENTS] = { 5, 4, 3, 2, 1 };
-    //double c[ELEMENTS] = { 0 };
+
 
     addWithCuda(rows, cols, iterations, td, h, matrix);
 
@@ -90,20 +97,23 @@ void addWithCuda(int rows, int cols, int iterations, double td, double h, double
     // calculate the total number of tiles to process, instanciate them
     int totalCells = rows * cols;
 
+    // we will max out all possible threads in a block (so 1024)
+    dim3 dimensionGrid(32, 32);
+    
+    // depending on our matrix size, our blocks will adjust
+    // so a matrix of 12x12, max threads = 144, 1x1 block
+    // matrix of 10000x10000, max threads = 100 000 000, 313x313 blocks
+    double xBlocks = ceil(double(cols) / double(dimensionGrid.x));
+    double yBlocks = ceil(double(rows) / double(dimensionGrid.y));
 
-    // 16 by 16 threads for each block (in my case I can only have 32 threads at once)
-    // something to note to keep dynamic thread allocation as per device
-    dim3 threadsPerBlock(16, 16);
-    dim3 numBlocks(cols/threadsPerBlock.x, rows/threadsPerBlock.y);
+    dim3 dimensionBlock(xBlocks, yBlocks);
+
+    std::cout << "Threads/block =  " << dimensionGrid.x* dimensionGrid.y << std::endl;
+    std::cout << "DimBlocks [x,y] =  " << xBlocks << ", " << yBlocks << std::endl;
     
 
     errCheck(cudaSetDevice(0));
-
-
     errCheck(cudaMalloc((void**)&dev_matrix, totalCells * sizeof(double)));
-    //errCheck(cudaMalloc((void**)&dev_b, totalCells * sizeof(int)));
-
-    //errCheck(cudaMemcpy(dev_matrix, matrix, totalCells * sizeof(int), cudaMemcpyHostToDevice));
     errCheck(cudaMemcpy(dev_matrix, convertedMatrix, totalCells * sizeof(double), cudaMemcpyHostToDevice));
     //errCheck(cudaMemcpy(dev_b, b, totalCells * sizeof(int), cudaMemcpyHostToDevice));
     
@@ -118,7 +128,7 @@ void addWithCuda(int rows, int cols, int iterations, double td, double h, double
     //dim3 threadsPerBlock(16, 16);
     //dim3 numBlocks(N / threadsPerBlock.x, N / threadsPerBlock.y);
     //MatAdd << <numBlocks, threadsPerBlock >> > (A, B, C);
-    addKernel <<<numBlocks, threadsPerBlock>>> (rows, cols, dev_matrix, totalCells);
+    addKernel <<<dimensionBlock, dimensionGrid >>> (rows, cols, iterations, td, h, dev_matrix, totalCells);
 
     errCheck(cudaGetLastError());
     errCheck(cudaDeviceSynchronize());
@@ -128,12 +138,15 @@ void addWithCuda(int rows, int cols, int iterations, double td, double h, double
 
     errCheck(cudaDeviceReset());
 
-
-    for (int i = 1; i < totalCells; i++) {
-        cout << ", " << convertedMatrix[i] << flush;
+    // preview our matrix before transfer
+    for (int i = 0; i < rows; i++) {
+        cout << "{" << flush;
+        for (int j = 0; j < cols; j++) {
+            std::cout << std::fixed << std::setw(12) << std::setprecision(2) << convertedMatrix[i * cols + j] << " " << std::flush;
+        }
+        cout << " }" << endl << flush;
     }
 
-    cout << " }" << endl << flush;
 
     transferToTargetMatrix(rows, cols, convertedMatrix, matrix);
 }
