@@ -34,8 +34,6 @@ __global__ void addKernel(double* a, double* c, int elements) {
 }
 
 void solvePar(int rows, int cols, int iterations, double td, double h, double** matrix) {
-    cout << "Do cuda related stuff here!" << endl << flush;
-
     // Example.
     // int elements = 5;
     //double a[ELEMENTS] = { 1, 2, 3, 4, 5 };
@@ -78,6 +76,8 @@ void addWithCuda(int rows, int cols, int iterations, double td, double h, double
     double* dev_matrix = nullptr;
     double* dev_subMatrix = nullptr;
 
+
+
     // calculate partial rows and cols matrix
     int partialRow = (rows % 2 == 0) ? rows / 2 : rows / 2 + 1;
     int partialCol = (cols % 2 == 0) ? cols / 2 : cols / 2 + 1;
@@ -96,6 +96,7 @@ void addWithCuda(int rows, int cols, int iterations, double td, double h, double
     errCheck(cudaMalloc((void**)&dev_matrix, totalCells * sizeof(int)));
     //errCheck(cudaMalloc((void**)&dev_b, totalCells * sizeof(int)));
 
+    //errCheck(cudaMemcpy(dev_matrix, matrix, totalCells * sizeof(int), cudaMemcpyHostToDevice));
     errCheck(cudaMemcpy(dev_matrix, matrix, totalCells * sizeof(int), cudaMemcpyHostToDevice));
     //errCheck(cudaMemcpy(dev_b, b, totalCells * sizeof(int), cudaMemcpyHostToDevice));
     
@@ -105,6 +106,11 @@ void addWithCuda(int rows, int cols, int iterations, double td, double h, double
     // in our addKernel, arguments should be
     // totalInputMatrix, partialMatrix, totalOutputMatrix
     //addKernel << <dimGrid, dimBlock >> > (dev_matrix, dev_b, dev_subMatrix, totalCells);
+
+    // Kernel invocation
+    //dim3 threadsPerBlock(16, 16);
+    //dim3 numBlocks(N / threadsPerBlock.x, N / threadsPerBlock.y);
+    //MatAdd << <numBlocks, threadsPerBlock >> > (A, B, C);
     addKernel <<<dimGrid, dimBlock>>> (dev_matrix, dev_subMatrix, totalCells);
 
     errCheck(cudaGetLastError());
@@ -149,6 +155,15 @@ void checkLocalDevice() {
     activeWarps = numBlocks * blockSize / prop.warpSize;
     maxWarps = prop.maxThreadsPerMultiProcessor / prop.warpSize;
 
+    std::cout << "Max threads(wrap) that can be run at once: " << prop.warpSize << std::endl;
+    std::cout << "Max dimension size of a thread block (x,y,z): " << "(" << prop.maxThreadsDim[0] << ", " << prop.maxThreadsDim[1] << ", " << prop.maxThreadsDim[2] << ")" << std::endl;
+    std::cout << "Max dimension size of a grid size    (x,y,z):: " << "(" << prop.maxGridSize[0] << ", " << prop.maxGridSize[1] << ", " << prop.maxGridSize[2] << ")" << std::endl;
     std::cout << "Occupancy: " << (double)activeWarps / maxWarps * 100 << "%" << std::endl;
+}
 
+// todo
+double* convert2DMatTo1D(double** matrix) {
+    double* convertedMatrix = nullptr;
+
+    return convertedMatrix;
 }
