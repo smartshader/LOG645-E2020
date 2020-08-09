@@ -10,7 +10,7 @@
 
 #define errCheck(code) { errorCheck((code), __FILE__, __LINE__); }
 void addWithCuda(int rows, int cols, int iterations, double td, double h, double** matrix);
-double* convert2DMatTo1D(double** matrix);
+double* convert2DMatTo1D(int rows, int cols, double** matrix);
 void checkLocalDevice();
 
 using std::cout;
@@ -77,7 +77,7 @@ void addWithCuda(int rows, int cols, int iterations, double td, double h, double
     double* dev_matrix = nullptr;
     double* dev_subMatrix = nullptr;
 
-    dev_matrix = convert2DMatTo1D(matrix);
+    dev_matrix = convert2DMatTo1D(rows, cols, matrix);
 
 
 
@@ -164,9 +164,16 @@ void checkLocalDevice() {
     std::cout << "Occupancy: " << (double)activeWarps / maxWarps * 100 << "%" << std::endl;
 }
 
-// todo
-double* convert2DMatTo1D(double** matrix) {
-    double* convertedMatrix = nullptr;
+double* convert2DMatTo1D(int rows, int cols, double** matrix) {
+    double* convertedMatrix = new double[rows * cols];
+
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            convertedMatrix[i * cols +j] = matrix[i][j];
+        }
+    }
 
     return convertedMatrix;
 }
