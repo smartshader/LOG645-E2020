@@ -11,7 +11,7 @@
 #define errCheck(code) { errorCheck((code), __FILE__, __LINE__); }
 void addWithCuda(int rows, int cols, int iterations, double td, double h, double** matrix);
 double* convert2DMatTo1D(int rows, int cols, double** matrix);
-double** convert1DMatTo2D(int rows, int cols, double* matrix);
+void transferToTargetMatrix(int rows, int cols, double* sourceMatrix, double** targetMatrix);
 void checkLocalDevice();
 
 using std::cout;
@@ -135,9 +135,7 @@ void addWithCuda(int rows, int cols, int iterations, double td, double h, double
 
     cout << " }" << endl << flush;
 
-    matrix = convert1DMatTo2D(rows, cols, convertedMatrix);
-
-    
+    transferToTargetMatrix(rows, cols, convertedMatrix, matrix);
 }
 
 void checkLocalDevice() {
@@ -171,19 +169,25 @@ void checkLocalDevice() {
 }
 
 
-// todo
-double* convert2DMatTo1D(int rows, int cols, double** matrix) {
-    double* convertedMatrix = new double [rows*cols];
-
-    return convertedMatrix;
-}
-
-// todo
-double** convert1DMatTo2D(int rows, int cols, double* matrix) {
-    double** convertedMatrix = new double* [rows];
+void transferToTargetMatrix(int rows, int cols, double* sourceMatrix, double** targetMatrix) {
 
     for (int i = 0; i < rows; i++) {
-        convertedMatrix[i] = new double[cols];
+        for (int j = 0; j < cols; j++) {
+            targetMatrix[i][j] = sourceMatrix[i * cols + j];
+        }
+    }
+
+}
+
+double* convert2DMatTo1D(int rows, int cols, double** matrix) {
+    double* convertedMatrix = new double[rows * cols];
+
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            convertedMatrix[i * cols +j] = matrix[i][j];
+        }
     }
 
     return convertedMatrix;
