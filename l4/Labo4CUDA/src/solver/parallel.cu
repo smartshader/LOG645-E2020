@@ -32,10 +32,12 @@ inline void errorCheck(cudaError_t code, const char* file, int line) {
 }
 
 __global__ void addKernel(int rows, int cols, double interations, double td, double h, double* matrix, int elements) {
+
     extern __shared__ int threadCount;
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     //printf("x = %d, BlockIdx = %d, BlockDimx = %d, threadIdx = %d\n", x, blockIdx.x, blockDim.x, threadIdx.x);
+
 
     if (((x < (cols - 1)) && (x > 0)) &&
         ((y < (rows - 1)) && (y > 0))) {
